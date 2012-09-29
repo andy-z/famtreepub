@@ -49,11 +49,13 @@ class Size(object):
             self.value = value.value
         else:
             raise TypeError("incorrect type of the argument: " + str(type(value)))
-        
+    
+    @property
     def pt(self):
         ''' return size in points ''' 
         return self.value*12.
 
+    @property
     def inches(self):
         ''' return size in inches ''' 
         return self.value
@@ -132,8 +134,8 @@ if __name__ == "__main__":
         def test_4_meth(self):
             
             s1 = Size("24pt")
-            self.assertEqual(s1.pt(), 24)
-            self.assertEqual(s1.inches(), 2)
+            self.assertEqual(s1.pt, 24)
+            self.assertEqual(s1.inches, 2)
     
         def test_5_copy(self):
             
