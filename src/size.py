@@ -35,7 +35,7 @@ class Size(object):
         elif type(value) in types.StringTypes:
             # convert units to inches
             if value.endswith('pt'):
-                self.value = float(value[:-2])/12.
+                self.value = float(value[:-2])/72.
             elif value.endswith('in'):
                 self.value = float(value[:-2])
             elif value.endswith('cm'):
@@ -53,7 +53,7 @@ class Size(object):
     @property
     def pt(self):
         ''' return size in points ''' 
-        return self.value*12.
+        return self.value*72.
 
     @property
     def inches(self):
@@ -62,7 +62,7 @@ class Size(object):
 
     def __str__(self):
         ''' Returns string representation, e.g. "12pt" '''
-        return str(self.value*12)+'pt'
+        return str(self.value)+'in'
 
     def __sub__(self, other):
         ''' Subtract size from other size '''
@@ -106,8 +106,8 @@ if __name__ == "__main__":
             self.assertEqual(Size("0.01").value, 0.01)
             self.assertEqual(Size("100").value, 100.)
 
-            self.assertEqual(Size("12pt").value, 1.)
-            self.assertEqual(Size("6.6pt").value, 6.6/12)
+            self.assertEqual(Size("72pt").value, 1.)
+            self.assertEqual(Size("6.6pt").value, 6.6/72)
             self.assertEqual(Size("2.54cm").value, 1)
             self.assertEqual(Size("2.54mm").value, 0.1)
         
@@ -117,8 +117,8 @@ if __name__ == "__main__":
     
         def test_3_arith(self):
     
-            s1 = Size("24pt")
-            s2 = Size("12pt")
+            s1 = Size("144pt")
+            s2 = Size("72pt")
 
             s3 = s1 + s2
             self.assertEqual(s3.value, 3.)
@@ -133,21 +133,21 @@ if __name__ == "__main__":
             
         def test_4_meth(self):
             
-            s1 = Size("24pt")
-            self.assertEqual(s1.pt, 24)
+            s1 = Size("144pt")
+            self.assertEqual(s1.pt, 144)
             self.assertEqual(s1.inches, 2)
     
         def test_5_copy(self):
             
-            s1 = Size("24pt")
+            s1 = Size("144pt")
             s2 = Size(s1 * 2)
             self.assertEqual(s2.value, 4)
             
         def test_6_str(self):
             
-            self.assertEqual(str(Size()), "0.0pt")
-            self.assertEqual(str(Size(2)), "24.0pt")
-            self.assertEqual(str(Size("1.5in")), "18.0pt")
+            self.assertEqual(str(Size()), "0.0in")
+            self.assertEqual(str(Size(2)), "2.0in")
+            self.assertEqual(str(Size("1.5in")), "1.5in")
             
     suite = unittest.TestLoader().loadTestsFromTestCase(SizeUnitTest)
     unittest.TextTestRunner(verbosity=2).run(suite)

@@ -40,14 +40,19 @@ class TextBox(object):
         self._rect_style = kw.get('rect_style', '')
         self._text_style = kw.get('text_style', '')
 
-    @property
-    def x0(self): return self._x0
+        # calculate height if needed
+        if kw.get('height') is None: self.reflow()
+
+    def _getx0(self): return self._x0
+    def _setx0(self, x): self._x0 = x
+    x0 = property(_getx0, _setx0)
 
     @property
     def x1(self): return self._x0 + self._width
 
-    @property
-    def y0(self): return self._y0
+    def _gety0(self): return self._y0
+    def _sety0(self, y): self._y0 = y
+    y0 = property(_gety0, _sety0)
 
     @property
     def y1(self): return self._y0 + self._height
@@ -83,7 +88,7 @@ class TextBox(object):
 
 
     def svg(self):
-        ''' Produces SVG XML text '''
+        ''' Produces list of SVG elements (pysvg obejcts) '''
         
         # render box
         kw = dict(x=str(self.x0), y=str(self.y0), width=str(self.width), height=str(self.height))
@@ -98,10 +103,10 @@ class TextBox(object):
             x = self.midx
             y = self.y0 + self._padding + self._font_size*(i+1) + self._line_spacing*i
             tspan = text.tspan(x=str(x), y=str(y))
-            tspan.appendTextContent(line)
+            tspan.appendTextContent(line.encode('utf_8'))
             txt.addElement(tspan)
 
-        return rect.getXML() + txt.getXML()
+        return [rect, txt]
 
     def _splitText(self, text):
         ''' 
@@ -113,12 +118,14 @@ class TextBox(object):
         
         lines = [] 
         for line in text.split('\n'):
-            words = line.split()
+            words0 = line.split()
+            words = words0[:]
             idx = 0
             while idx+1 < len(words):
-                twowords = ' '.join(words[idx:idx+2])
+                twowords = words[idx] + ' ' + words[idx+1]
                 if self._textWidth(twowords) <= width:
-                    words[idx:idx+2] = twowords
+                    words[idx] = twowords
+                    del words[idx+1]
                 else:
                     idx += 1
             lines += words
@@ -130,7 +137,7 @@ class TextBox(object):
         ''' Calculates approximate width of the string of text '''
         
         # just  a wild guess for now, try to do better later
-        return self._font_size * len(text) * 0.75
+        return self._font_size * len(text)
 
 
 if __name__ == "__main__":
@@ -176,12 +183,6 @@ if __name__ == "__main__":
             box = TextBox(width='36pt', text='abcdefg ABCDEFG', font_size='10pt', line_spacing='3pt', padding='5pt')
             box.reflow()
             self.assertEqual(box.height.pt, 10*2 + 3 + 2*5)
-            
-        def test_5_svg(self):
-            
-            box = TextBox(width='36pt', text='abcdefg ABCDEFG', font_size='10pt', line_spacing='3pt', padding='5pt')
-            box.reflow()
-            print box.svg()
             
     suite = unittest.TestLoader().loadTestsFromTestCase(TextBoxUnitTest)
     unittest.TextTestRunner(verbosity=2).run(suite)

@@ -12,6 +12,8 @@ import hashlib
 from odf.opendocument import OpenDocumentText
 from odf import text, style, draw, table
 
+from plotter import Plotter
+from size import Size
 
 def _unknownName(name):
     return name is None or name.startswith(('?', '.'))
@@ -61,10 +63,11 @@ class OdtWriter(object):
 
     def __init__(self, filename, page_width, page_height, margin, imagedir):
         self.filename = filename
-        self.page_width = page_width
-        self.page_height = page_height
-        self.margin = margin
+        self.page_width = Size(page_width)
+        self.page_height = Size(page_height)
+        self.margin = Size(margin)
         self.imagedir = imagedir
+        
                 
     def write(self, model):
         
@@ -73,7 +76,7 @@ class OdtWriter(object):
         # set paper dimensions
         pageLayout = style.PageLayout(name=u"pl1")
         doc.automaticstyles.addElement(pageLayout)
-        plProp = style.PageLayoutProperties(pageheight=self.page_height, pagewidth=self.page_width, margin=self.margin)
+        plProp = style.PageLayoutProperties(pageheight=str(self.page_height), pagewidth=str(self.page_width), margin=str(self.margin))
         pageLayout.addElement(plProp)
         
         masterpage = style.MasterPage(name=u"Standard", pagelayoutname=pageLayout)
@@ -217,7 +220,9 @@ class OdtWriter(object):
             if tree_elem:
                 hdr = _tr("Ancestor tree", person)
                 doc.text.addElement(text.H(text=hdr, outlinelevel=3, stylename=h3style))
-                doc.text.addElement(tree_elem)
+                p = text.P()
+                p.addElement(tree_elem)
+                doc.text.addElement(p)
 
 
         doc.save(self.filename)
@@ -235,7 +240,7 @@ class OdtWriter(object):
             imgfile = os.path.join(self.imagedir, photos[0].file)
             img = Image.open(imgfile)
             imgdata = file(imgfile, 'rb').read()
-            filename = "Pictures/" + hashlib.sha1(imgdata).hexdigest()
+            filename = "Pictures/" + hashlib.sha1(imgdata).hexdigest() + '.' +img.format
 
             # calculate size of the frame
             h = 2.
@@ -251,68 +256,24 @@ class OdtWriter(object):
         
     def _getParentTree(self, person, doc, tablestyle, treecellstyle, treeparastyle):
         '''
-        Returns table of the parent tree
+        Returns element containg parent tree or None
         '''
 
-        def _genDepth(person):
-            if not person: return 0
-            return max(_genDepth(person.father), _genDepth(person.mother)) + 1
+        width = self.page_width - 2*self.margin
+
+        plotter = Plotter()
+        img = plotter.parent_tree(person, width=width, gen_dist="12pt", font_size="10pt")
+        if img is None: return
+
+        # if not None then 4-tuple
+        imgdata, imgtype, width, height = img
         
-        def _parents(people):
-            for p in people:
-                if p:
-                    yield p.father
-                    yield p.mother
-                else:
-                    yield None
-                    yield None
-
-        # get the number of generations, limit to 4
-        ngen = min(_genDepth(person), 4)
-
-        # if no parents then do not display anything
-        if ngen < 2: return
+        # store image
+        filename = "Pictures/" + hashlib.sha1(imgdata).hexdigest() + '.svg'
+        imgref = doc.addPicture(filename, imgtype, imgdata)
         
-        # make a table
-        tbl = table.Table(stylename=tablestyle)
+        frame = draw.Frame(width=str(width), height=str(height))
+        frame.addElement(draw.Image(href=imgref))
         
-        # define columns
-        for icol in range(ngen):
-            col  = table.TableColumn()
-            tbl.addElement(col)
-
-        # number of rows in a table
-        nrows = 2**(ngen-1)
-            
-        # make the list of people in each generation
-        contents = [[person]]
-        while len(contents) < ngen:
-            contents.append(list(_parents(contents[-1])))
-
-        # loop over rows and columns, merge some cells
-        for irow in range(nrows):
-            
-            row  = table.TableRow()
-            tbl.addElement(row)
-            
-            for icol in range(ngen):
-                merge = nrows/len(contents[icol])
-                if irow % merge == 0:
-                    cell  = table.TableCell(numberrowsspanned=merge, stylename=treecellstyle)
-                    pers = contents[icol][irow/merge]
-                    p = text.P(stylename=treeparastyle)
-                    if pers:
-                        if icol > 0:
-                            name = (pers.name.first or '') + ' ' + (pers.name.last or '') 
-                        else:
-                            name = (pers.name.first or '') + ' ' + (pers.name.maiden or pers.name.last or '') 
-                        p.addText(name)
-                    else:
-                        p.addText('?')
-                    cell.addElement(p)
-                    row.addElement(cell)
-                else:
-                    cell  = table.CoveredTableCell()
-            
-        return tbl
+        return frame
         
