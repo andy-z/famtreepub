@@ -64,6 +64,10 @@ class Size(object):
         ''' Returns string representation, e.g. "12pt" '''
         return str(self.value)+'in'
 
+    def __cmp__(self, other):
+        ''' Compare two sizes size '''
+        return cmp(self.value, other.value)
+    
     def __sub__(self, other):
         ''' Subtract size from other size '''
         return Size(self.value-other.value)

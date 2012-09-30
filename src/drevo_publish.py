@@ -7,14 +7,18 @@ Created on Sep 8, 2012
 
 import os
 from optparse import OptionParser
+import logging
+
 from drevo_reader import DrevoReader 
 from odt_writer import OdtWriter
-
 from size import Size
 
 def main():
 
     parser = OptionParser(usage = "usage: %prog [options] file.xml")
+    parser.add_option("-v", "--verbose",
+                  action="count", dest="verbose", default=0,
+                  help="more verbose output")
     parser.add_option("-o", "--output",
                   action="store", dest="output", default=None,
                   help="set name of the output file")
@@ -30,6 +34,11 @@ def main():
     (options, args) = parser.parse_args()
     if len(args) != 1:
         parser.error('One positional argument is required')
+
+    if options.verbose == 1:
+        logging.getLogger().setLevel(logging.INFO)
+    elif options.verbose > 1:
+        logging.getLogger().setLevel(logging.DEBUG)
 
     if not options.output:
         options.output = os.path.basename(args[0]) + '.odt'

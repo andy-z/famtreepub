@@ -4,6 +4,7 @@ Created on Sep 27, 2012
 @author: salnikov
 '''
 
+import logging
 from pysvg import shape, text
 
 from size import Size
@@ -128,20 +129,24 @@ class TextBox(object):
         
         width = self._width - 2*self._padding
         
+        logging.debug('=========================================================')
+        logging.debug('_splitText: %s width=%s', text, width)
+        
         lines = [] 
         for line in text.split('\n'):
-            words0 = line.split()
-            words = words0[:]
+            words = line.split()
             idx = 0
             while idx+1 < len(words):
-                twowords = words[idx] + ' ' + words[idx+1]
-                if self._textWidth(twowords) <= width:
-                    words[idx] = twowords
-                    del words[idx+1]
+                twowords = ' '.join(words[idx:idx+2])
+                twwidth = self._textWidth(twowords)
+                logging.debug('_splitText: %s width=%s', twowords, twwidth)
+                if twwidth <= width:
+                    words[idx:idx+2] = [twowords]
                 else:
                     idx += 1
             lines += words
             
+        logging.debug('_splitText: lines=[%s]', ' | '.join(lines))
         return lines
             
 
@@ -149,7 +154,7 @@ class TextBox(object):
         ''' Calculates approximate width of the string of text '''
         
         # just  a wild guess for now, try to do better later
-        return self._font_size * len(text)
+        return self._font_size * len(text) * 0.5
 
 
 if __name__ == "__main__":
