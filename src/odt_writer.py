@@ -262,7 +262,7 @@ class OdtWriter(object):
         width = self.page_width - 2*self.margin
 
         plotter = Plotter()
-        img = plotter.parent_tree(person, width=width, gen_dist="12pt", font_size="10pt")
+        img = plotter.parent_tree(person, width=width, gen_dist="12pt", font_size="9pt")
         if img is None: return
 
         # if not None then 4-tuple

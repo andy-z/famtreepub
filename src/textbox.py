@@ -35,8 +35,8 @@ class TextBox(object):
         self._text = kw.get('text', '')
         self._lines = self._text.split('\n')
         self._font_size = Size(kw.get('font_size', '10pt'))
-        self._padding = Size(kw.get('padding', '3pt'))
-        self._line_spacing = Size(kw.get('line_spacing', '3pt'))
+        self._padding = Size(kw.get('padding', '4pt'))
+        self._line_spacing = Size(kw.get('line_spacing', '1.5pt'))
         self._rect_style = kw.get('rect_style', '')
         self._text_style = kw.get('text_style', '')
 
@@ -90,23 +90,35 @@ class TextBox(object):
     def svg(self):
         ''' Produces list of SVG elements (pysvg obejcts) '''
         
+        shapes = []
+        
         # render box
         kw = dict(x=str(self.x0), y=str(self.y0), width=str(self.width), height=str(self.height))
         if self._rect_style: kw['style'] = self._rect_style
         rect = shape.rect(**kw)
+        shapes.append(rect)
         
         # render text
-        kw = dict(text_anchor='middle')
+        kw = dict(text_anchor='middle', font_size=str(self._font_size))
         if self._text_style: kw['style'] = self._text_style
         txt = text.text(**kw)
+        shapes.append(txt)
         for i, line in enumerate(self._lines):
             x = self.midx
             y = self.y0 + self._padding + self._font_size*(i+1) + self._line_spacing*i
             tspan = text.tspan(x=str(x), y=str(y))
             tspan.appendTextContent(line.encode('utf_8'))
             txt.addElement(tspan)
+            
+#            x0 = x - Size('36pt')
+#            x1 = x + Size('36pt')
+#            l = shape.line(X1=str(x0), Y1=str(y), X2=str(x1), Y2=str(y), style='fill:none;stroke-width:0.1pt;stroke:blue')
+#            shapes.append(l)
+#            y1 = y - self._font_size
+#            l = shape.line(X1=str(x0), Y1=str(y1), X2=str(x1), Y2=str(y1), style='fill:none;stroke-width:0.1pt;stroke:red')
+#            shapes.append(l)
 
-        return [rect, txt]
+        return shapes
 
     def _splitText(self, text):
         ''' 
