@@ -4,6 +4,9 @@ Created on Sep 6, 2012
 @author: salnikov
 '''
 
+import logging
+
+_log = logging.getLogger(__name__)
 
 def _tagtext(elem, tag):
     child = elem.find(tag)
@@ -13,7 +16,8 @@ def _tagid(elem, tag):
     child = elem.find(tag)
     if child is not None: return child.get('id')
 
-
+# global mapping for person id -> person
+_id2pers = {}
 
 
 class Name(object):
@@ -25,6 +29,9 @@ class Name(object):
         self.middle = _tagtext(elem, 'mn')
         self.maiden = _tagtext(elem, 'msn')
         self.maiden_full = " ".join([(self.maiden or self.last) or "", self.first or "", self.middle or ""])
+        
+    def __str__(self):
+        return self.full
 
 class Doc(object):
 
@@ -35,7 +42,12 @@ class Doc(object):
         self.file = _tagtext(elem, 'file')
         self.date = _tagtext(elem, 'date')
         self.comment = _tagtext(elem, 'comment')
-        self.people = [el.get('id') for el in elem.findall('persons/p')]
+        self._people = [el.get('id') for el in elem.findall('persons/p')]
+
+    @property
+    def people(self):
+        return map(_id2pers.get, self._people)
+    
 
 
 class Date(object):
@@ -79,9 +91,20 @@ class Spouse(object):
     def __init__(self, elem):
         self.id = elem.get('id')
         self.marriage = Event(_tagtext(elem, 'marriage/date'), _tagtext(elem, "marriage/pl_full"))
-        self.children = [el.get('id') for el in elem.findall('child')]
+        self._children = [el.get('id') for el in elem.findall('child')]
         self.divorced = elem.find('divorce') is not None
 
+    @property
+    def person(self):
+        return _id2pers.get(self.id)
+    
+    @property
+    def children(self):
+        return map(_id2pers.get, self._children)
+    
+    def __str__(self):
+        return 'Spouse(id = %s, person = %s)' % (self.id, self.person)
+    
 
 class Person(object):
     '''
@@ -91,13 +114,29 @@ class Person(object):
         '''
         Constructor
         '''
+        
         self.id = elem.get('id')
         self.name = Name(elem)
         self.sex = _tagtext(elem, 'sex')
         self.birth = Event(_tagtext(elem, 'bfdate'), _tagtext(elem, 'bplace'))
         self.death = Event(_tagtext(elem, 'dfdate'), _tagtext(elem, 'dplace'))
-        self.mother = _tagid(elem, 'mother')
-        self.father = _tagid(elem, 'father')
+        self._mother = _tagid(elem, 'mother')
+        self._father = _tagid(elem, 'father')
         self.occupation = _tagtext(elem, 'occu')
         self.comment = _tagtext(elem, 'comment')
         self.spouses = [Spouse(el) for el in elem.findall('spouse')]
+
+        # add this person to global id map
+        global _id2pers
+        _id2pers[self.id] = self
+
+    @property
+    def mother(self):
+        return _id2pers.get(self._mother)
+    
+    @property
+    def father(self):
+        return _id2pers.get(self._father)
+    
+    def __str__(self):
+        return "Person(id = %s, name = %s)" % (self.id, self.name)

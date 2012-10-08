@@ -9,12 +9,16 @@ import os
 from optparse import OptionParser
 import logging
 
+logging.basicConfig()
+
 from drevo_reader import DrevoReader 
 from odt_writer import OdtWriter
 from size import Size
+from input import FileLocator
 
 def main():
 
+    # setup option parser and parse command line
     parser = OptionParser(usage = "usage: %prog [options] file.xml")
     parser.add_option("-v", "--verbose",
                   action="count", dest="verbose", default=0,
@@ -35,21 +39,26 @@ def main():
     if len(args) != 1:
         parser.error('One positional argument is required')
 
+    # setup logging
     if options.verbose == 1:
         logging.getLogger().setLevel(logging.INFO)
     elif options.verbose > 1:
         logging.getLogger().setLevel(logging.DEBUG)
 
+    # make output file name
     if not options.output:
         options.output = os.path.basename(args[0]) + '.odt'
 
-    reader = DrevoReader(args[0])
+    # inctantiate file locator
+    fileFactory = FileLocator(args[0], imagedir=options.image_dir)
 
-    writer = OdtWriter(options.output, 
+    reader = DrevoReader(fileFactory)
+
+    writer = OdtWriter(fileFactory,
+                       options.output, 
                        page_width=Size(options.page_width), 
                        page_height=Size(options.page_height),
-                       margin=Size(options.margin),
-                       imagedir=options.image_dir)
+                       margin=Size(options.margin))
     writer.write(reader)
     
     print "Finished OK"

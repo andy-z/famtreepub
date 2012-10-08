@@ -8,12 +8,16 @@ Created on Sep 8, 2012
 import os
 import Image
 import hashlib
+import logging
+from cStringIO import StringIO
 
 from odf.opendocument import OpenDocumentText
 from odf import text, style, draw, table
 
 from plotter import Plotter
 from size import Size
+
+_log = logging.getLogger(__name__)
 
 def _unknownName(name):
     return name is None or name.startswith(('?', '.'))
@@ -35,7 +39,7 @@ def _personCmp(lhs, rhs):
     return _nameCmp(lhs.middle, rhs.middle)
 
 
-def _tr(str, person):
+def _tr(str, person = None):
     if str == 'Unknown': return u'Неизвестно'
     if str == 'Born' and person.sex == 'M': return u'Родился'
     if str == 'Born' and person.sex == 'F': return u'Родилась'
@@ -53,7 +57,14 @@ def _tr(str, person):
     if str == 'Spouses and children': return u'Супруги и дети'
     if str == 'Events and dates': return u'События и даты'
     if str == 'Ancestor tree': return u'Предки'
-
+    if str == 'Comments': return u'Комментарии'
+    if str == 'Person List': return u'Персоналии'
+    if str == 'Statistics': return u'Статистика'
+    if str == 'Total Statistics': return u'Общая статистика'
+    if str == 'Name Statistics': return u'Статистика имен'
+    if str == 'Female Name Frequency': return u'Частота женских имен'
+    if str == 'Male Name Frequency': return u'Частота мужских имен'
+    return str
 
 class OdtWriter(object):
     '''
@@ -61,13 +72,13 @@ class OdtWriter(object):
     '''
 
 
-    def __init__(self, filename, page_width, page_height, margin, imagedir):
+    def __init__(self, fileFactory, filename, page_width, page_height, margin, firstpage=1):
+        self.fileFactory = fileFactory
         self.filename = filename
         self.page_width = Size(page_width)
         self.page_height = Size(page_height)
         self.margin = Size(margin)
-        self.imagedir = imagedir
-        
+        self.firstpage = firstpage
                 
     def write(self, model):
         
@@ -79,12 +90,36 @@ class OdtWriter(object):
         plProp = style.PageLayoutProperties(pageheight=str(self.page_height), pagewidth=str(self.page_width), margin=str(self.margin))
         pageLayout.addElement(plProp)
         
+        footer = style.Footer()
+        foostyle = style.Style(name="Footer", family="paragraph")
+        foostyle.addElement(style.ParagraphProperties(textalign='center'))
+        doc.automaticstyles.addElement(foostyle)
+        p = text.P(stylename = foostyle)
+        p.addElement(text.PageNumber(selectpage="current", pageadjust=str(self.firstpage-1)))
+        footer.addElement(p)
+        
         masterpage = style.MasterPage(name=u"Standard", pagelayoutname=pageLayout)
+        masterpage.addElement(footer)
         doc.masterstyles.addElement(masterpage)
         
-        # heading styles 
+        # heading styles
+        h1topmrg = self.page_height * 0.5 - self.margin - Size('22pt')
+        h1style = style.Style(name="Heading 1", family="paragraph")
+        h1style.addElement(style.ParagraphProperties(textalign='center', breakbefore='page', margintop=str(h1topmrg)))
+        h1style.addElement(style.TextProperties(fontsize='22pt', fontweight='bold'))
+        doc.styles.addElement(h1style)
+
+        brstyle = style.Style(name="Break", family="paragraph")
+        brstyle.addElement(style.ParagraphProperties(textalign='center', breakafter='page'))
+        doc.automaticstyles.addElement(brstyle)
+
+        h2namestyle = style.Style(name="Heading 2 (Name)", family="paragraph")
+        h2namestyle.addElement(style.ParagraphProperties(textalign='center', breakbefore='page', marginbottom="14pt"))
+        h2namestyle.addElement(style.TextProperties(fontsize='14pt', fontweight='bold'))
+        doc.styles.addElement(h2namestyle)
+
         h2style = style.Style(name="Heading 2", family="paragraph")
-        h2style.addElement(style.ParagraphProperties(textalign='center', breakbefore='page', marginbottom="14pt"))
+        h2style.addElement(style.ParagraphProperties(textalign='center', margintop="12pt"))
         h2style.addElement(style.TextProperties(fontsize='14pt', fontweight='bold'))
         doc.styles.addElement(h2style)
 
@@ -99,7 +134,7 @@ class OdtWriter(object):
         imgstyle.addElement(style.GraphicProperties(verticalpos='top', verticalrel='paragraph-content',
                                                     horizontalpos='right', horizontalrel='page-content',
                                                     marginleft="0.1in", marginbottom="0.1in"))
-        doc.styles.addElement(imgstyle)
+        doc.automaticstyles.addElement(imgstyle)
 
         # style for tree table
         treetablestyle = style.Style(name="TreeTableStyle", family="table")
@@ -117,6 +152,11 @@ class OdtWriter(object):
         doc.automaticstyles.addElement(treeparastyle)
         
         
+        # generate some stats
+        hdr = _tr("Person List", None)
+        doc.text.addElement(text.H(text=hdr, outlinelevel=1, stylename=h1style))
+        doc.text.addElement(text.P(text='', stylename=brstyle))
+
         # sort people according to last name, first name, middle name, missing
         # names or names starting with '?' sort last
         people = model.people[:]
@@ -124,8 +164,10 @@ class OdtWriter(object):
         
         for person in people:
             
+            _log.debug('Processing %s', person)            
+            
             # page title
-            doc.text.addElement(text.H(text=person.name.full, outlinelevel=2, stylename=h2style))
+            doc.text.addElement(text.H(text=person.name.full, outlinelevel=2, stylename=h2namestyle))
 
 
             p = text.P()
@@ -147,12 +189,10 @@ class OdtWriter(object):
 
             # Parents
             if person.mother:
-                p = text.P()
-                p.addText(_tr('Mother', person) + ": " + person.mother.name.full)
+                p = text.P(text = _tr('Mother', person) + ": " + person.mother.name.full)
                 doc.text.addElement(p)
             if person.father:
-                p = text.P()
-                p.addText(_tr('Father', person) + ": " + person.father.name.full)
+                p = text.P(text = _tr('Father', person) + ": " + person.father.name.full)
                 doc.text.addElement(p)
 
 
@@ -162,17 +202,16 @@ class OdtWriter(object):
                 hdr = _tr("Spouses and children", person)
                 doc.text.addElement(text.H(text=hdr, outlinelevel=3, stylename=h3style))
             for spouse in person.spouses:
+                _log.debug('spouse = %s; children ids = %s; children = %s', spouse, spouse._children, spouse.children)
                 if spouse.person:
-                    p = text.P()
-                    p.addText(_tr('Spouse', person) + ": " + spouse.person.name.full)
+                    p = text.P(text = _tr('Spouse', person) + ": " + spouse.person.name.full)
                     kids = [c.name.first for c in spouse.children]
                     if kids: p.addText("; " + _tr('kids', '') + ': ' + ', '.join(kids))
                     doc.text.addElement(p)
                 else:
                     own_kids += [c.name.first for c in spouse.children]
             if own_kids: 
-                p = text.P()
-                p.addText(_tr('Kids', '') + ': ' + ', '.join(own_kids))
+                p = text.P(text = _tr('Kids', '') + ': ' + ', '.join(own_kids))
                 doc.text.addElement(p)
 
             # All relevant dates
@@ -202,20 +241,20 @@ class OdtWriter(object):
                 hdr = _tr("Events and dates", person)
                 doc.text.addElement(text.H(text=hdr, outlinelevel=3, stylename=h3style))
             for evt in events:
-                p = text.P()
-                p.addText(str(evt[0]) + ": " + evt[1])
+                p = text.P(text = str(evt[0]) + ": " + evt[1])
                 doc.text.addElement(p)
             
 
             # Comments are published as set of paragraphs
             if person.comment:
+                hdr = _tr("Comments", person)
+                doc.text.addElement(text.H(text=hdr, outlinelevel=3, stylename=h3style))
+
                 doc.text.addElement(text.P())
                 for para in person.comment.split('\n'):
-                    p = text.P()
-                    p.addText(para)
-                    doc.text.addElement(p)
+                    doc.text.addElement(text.P(text = para))
                     
-                    
+            # plot ancestors tree
             tree_elem = self._getParentTree(person, doc, treetablestyle, treecellstyle, treeparastyle)
             if tree_elem:
                 hdr = _tr("Ancestor tree", person)
@@ -225,6 +264,38 @@ class OdtWriter(object):
                 doc.text.addElement(p)
 
 
+        # generate some stats
+        hdr = _tr("Statistics", None)
+        doc.text.addElement(text.H(text=hdr, outlinelevel=1, stylename=h1style))
+        doc.text.addElement(text.P(text='', stylename=brstyle))
+
+        hdr = _tr("Total Statistics", None)
+        doc.text.addElement(text.H(text=hdr, outlinelevel=2, stylename=h2style))
+        nmales = len([person for person in people if person.sex == 'M'])
+        nfemales = len([person for person in people if person.sex == 'F'])
+        p = text.P(text = '%s: %d' % (_tr('Всего персон'), len(people)))
+        doc.text.addElement(p)
+        p = text.P(text = '%s: %d' % (_tr('Женского пола'), nfemales))
+        doc.text.addElement(p)
+        p = text.P(text = '%s: %d' % (_tr('Мужского пола'), nmales))
+        doc.text.addElement(p)
+
+
+        hdr = _tr("Name Statistics", None)
+        doc.text.addElement(text.H(text=hdr, outlinelevel=2, stylename=h2style))
+
+        hdr = _tr("Female Name Frequency", None)
+        doc.text.addElement(text.H(text=hdr, outlinelevel=3, stylename=h3style))
+        elem = self._namestat(person for person in people if person.sex == 'F')
+        doc.text.addElement(elem)
+        
+        hdr = _tr("Male Name Frequency", None)
+        doc.text.addElement(text.H(text=hdr, outlinelevel=3, stylename=h3style))
+        elem = self._namestat(person for person in people if person.sex == 'M')
+        doc.text.addElement(elem)
+        
+
+        # save the result
         doc.save(self.filename)
         
 
@@ -234,12 +305,13 @@ class OdtWriter(object):
         '''
         photos = model.getPhotos(person)
         if photos: photos = [photo for photo in photos if photo.default]
-        if photos and self.imagedir is not None: 
+        if photos: 
             
             # find image file, get its data
-            imgfile = os.path.join(self.imagedir, photos[0].file)
+            imgfile = self.fileFactory.openImage(photos[0].file)
+            imgdata = imgfile.read()
+            imgfile = StringIO(imgdata)
             img = Image.open(imgfile)
-            imgdata = file(imgfile, 'rb').read()
             filename = "Pictures/" + hashlib.sha1(imgdata).hexdigest() + '.' +img.format
 
             # calculate size of the frame
@@ -277,3 +349,54 @@ class OdtWriter(object):
         
         return frame
         
+    def _namestat(self, people):
+        
+        def _gencouples(namefreq):
+            halflen = (len(namefreq)+1)/2
+            for i in range(halflen):
+                c1, n1 = namefreq[2*i]
+                c2, n2 = None, None
+                if 2*i+1 < len(namefreq):
+                    c2, n2 = namefreq[2*i+1]
+                yield c1, n1, c2, n2
+        
+        namefreq = {}
+        for person in people:
+            counter = namefreq.setdefault(person.name.first, 0)
+            namefreq[person.name.first] += 1
+        namefreq = [(val, key) for key, val in namefreq.items()]
+        # sort descending in frequency, accending in name
+        namefreq.sort(key = lambda x: (-x[0], x[1]))
+        total = float(sum(count for count, name in namefreq))
+
+        tbl = table.Table()
+        tbl.addElement(table.TableColumn())
+        tbl.addElement(table.TableColumn())
+        tbl.addElement(table.TableColumn())
+        tbl.addElement(table.TableColumn())
+
+        for count1, name1, count2, name2 in _gencouples(namefreq):
+
+            row = table.TableRow()
+            
+            cell = table.TableCell()
+            cell.addElement(text.P(text = name1))
+            row.addElement(cell)
+            
+            cell = table.TableCell()
+            cell.addElement(text.P(text = '%d (%.1f%%)' % (count1, count1/total*100)))
+            row.addElement(cell)
+
+            if count2 is not None:
+
+                cell = table.TableCell()
+                cell.addElement(text.P(text = name2))
+                row.addElement(cell)
+                
+                cell = table.TableCell()
+                cell.addElement(text.P(text = '%d (%.1f%%)' % (count2, count2/total*100)))
+                row.addElement(cell)
+
+            tbl.addElement(row)
+
+        return tbl

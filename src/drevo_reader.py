@@ -4,10 +4,12 @@ Created on Sep 6, 2012
 @author: salnikov
 '''
 
+import logging
+
 import xml.etree.ElementTree as ET
 from person import Person, Name, Doc
 
-
+_log = logging.getLogger(__name__)
 
 class DrevoReader(object):
     '''
@@ -15,12 +17,16 @@ class DrevoReader(object):
     '''
 
 
-    def __init__(self, filename):
+    def __init__(self, fileFactory):
         '''
         Constructor takes the name of the input XML file.
         '''
         
-        tree = ET.parse(filename)
+        # open XML file
+        xml = fileFactory.openXML()
+        
+        # read and parse whole tree
+        tree = ET.parse(xml)
         root = tree.getroot()
 
         self.docs = []
@@ -29,29 +35,13 @@ class DrevoReader(object):
         for el in root.findall('Pers/r'):
             
             # collect documents in separate list
-            self.docs += [Doc(d) for d in el.findall('doc')]
+            self.docs += map(Doc, el.findall('doc'))
             
             # make person
-            self.people.append(Person(el))
+            person = Person(el)
+            self.people.append(person)
+            _log.debug('Adding person %s', person)
             
-        # map IDs to people
-        ids = dict()
-        for p in self.people:
-            ids[p.id] = p
-            
-        # replace ID references with real objects
-        for p in self.people:
-            
-            if p.mother: p.mother = ids.get(p.mother)
-            if p.father: p.father = ids.get(p.father)
-            
-            for s in p.spouses:
-                s.person = ids.get(s.id)
-                s.children = [ids.get(cid) for cid in s.children]
-
-        for d in self.docs:
-            d.people = [ids.get(pid) for pid in d.people]
-
     def getPhotos(self, person):
         
         # find docs with this person id and docclass="photo"
