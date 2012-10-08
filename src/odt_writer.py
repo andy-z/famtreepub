@@ -64,7 +64,15 @@ def _tr(str, person = None):
     if str == 'Name Statistics': return u'Статистика имен'
     if str == 'Female Name Frequency': return u'Частота женских имен'
     if str == 'Male Name Frequency': return u'Частота мужских имен'
+    if str == 'Table Of Contents': return u'Оглавление'
     return str
+
+# indices of margins
+MARGIN_LEFT = 0
+MARGIN_RIGHT = 1
+MARGIN_TOP = 2
+MARGIN_BOTTOM = 3
+MARGIN_KW = ['marginleft', 'marginright', 'margintop', 'marginbottom']
 
 class OdtWriter(object):
     '''
@@ -72,13 +80,19 @@ class OdtWriter(object):
     '''
 
 
-    def __init__(self, fileFactory, filename, page_width, page_height, margin, firstpage=1):
+    def __init__(self, fileFactory, filename, **kw):
         self.fileFactory = fileFactory
         self.filename = filename
-        self.page_width = Size(page_width)
-        self.page_height = Size(page_height)
-        self.margin = Size(margin)
-        self.firstpage = firstpage
+        self.page_width = Size(kw.get("page_width", "6in"))
+        self.page_height = Size(kw.get("page_height", "9in"))
+
+        margin = kw.get("margin", "0.5in")
+        self.margins = [margin, margin, margin, margin]
+        for margin in range(4):
+            if MARGIN_KW[margin] in kw: self.margins[margin] = kw.get(MARGIN_KW[margin])
+        self.margins = map(Size, self.margins)
+        
+        self.firstpage = kw.get('firstpage', 1)
                 
     def write(self, model):
         
@@ -87,12 +101,15 @@ class OdtWriter(object):
         # set paper dimensions
         pageLayout = style.PageLayout(name=u"pl1")
         doc.automaticstyles.addElement(pageLayout)
-        plProp = style.PageLayoutProperties(pageheight=str(self.page_height), pagewidth=str(self.page_width), margin=str(self.margin))
+        plProp = style.PageLayoutProperties(pageheight=str(self.page_height), pagewidth=str(self.page_width), 
+                        marginleft=str(self.margins[MARGIN_LEFT]), marginright=str(self.margins[MARGIN_RIGHT]), 
+                        margintop=str(self.margins[MARGIN_TOP]), marginbottom=str(self.margins[MARGIN_BOTTOM]))
         pageLayout.addElement(plProp)
         
         footer = style.Footer()
         foostyle = style.Style(name="Footer", family="paragraph")
         foostyle.addElement(style.ParagraphProperties(textalign='center'))
+        foostyle.addElement(style.TextProperties(fontsize='10pt'))
         doc.automaticstyles.addElement(foostyle)
         p = text.P(stylename = foostyle)
         p.addElement(text.PageNumber(selectpage="current", pageadjust=str(self.firstpage-1)))
@@ -103,7 +120,7 @@ class OdtWriter(object):
         doc.masterstyles.addElement(masterpage)
         
         # heading styles
-        h1topmrg = self.page_height * 0.5 - self.margin - Size('22pt')
+        h1topmrg = (self.page_height - self.margins[MARGIN_TOP] - self.margins[MARGIN_BOTTOM]) * 0.5  - Size('22pt')
         h1style = style.Style(name="Heading 1", family="paragraph")
         h1style.addElement(style.ParagraphProperties(textalign='center', breakbefore='page', margintop=str(h1topmrg)))
         h1style.addElement(style.TextProperties(fontsize='22pt', fontweight='bold'))
@@ -294,6 +311,14 @@ class OdtWriter(object):
         elem = self._namestat(person for person in people if person.sex == 'M')
         doc.text.addElement(elem)
         
+        # TOC
+        doc.text.addElement(text.P(text='', stylename=brstyle))
+        toc = text.TableOfContent(name='TOC')
+        tocsrc = text.TableOfContentSource(outlinelevel=2)
+        toctitle = text.IndexTitleTemplate(text = _tr('Table Of Contents'))
+        tocsrc.addElement(toctitle)
+        toc.addElement(tocsrc)
+        doc.text.addElement(toc)
 
         # save the result
         doc.save(self.filename)
@@ -331,7 +356,7 @@ class OdtWriter(object):
         Returns element containg parent tree or None
         '''
 
-        width = self.page_width - 2*self.margin
+        width = self.page_width - self.margins[MARGIN_LEFT] - self.margins[MARGIN_RIGHT]
 
         plotter = Plotter()
         img = plotter.parent_tree(person, width=width, gen_dist="12pt", font_size="9pt")
@@ -354,20 +379,20 @@ class OdtWriter(object):
         def _gencouples(namefreq):
             halflen = (len(namefreq)+1)/2
             for i in range(halflen):
-                c1, n1 = namefreq[2*i]
-                c2, n2 = None, None
+                n1, c1 = namefreq[2*i]
+                n2, c2 = None, None
                 if 2*i+1 < len(namefreq):
-                    c2, n2 = namefreq[2*i+1]
-                yield c1, n1, c2, n2
+                    n2, c2 = namefreq[2*i+1]
+                yield n1, c1, n2, c2
         
         namefreq = {}
         for person in people:
             counter = namefreq.setdefault(person.name.first, 0)
             namefreq[person.name.first] += 1
-        namefreq = [(val, key) for key, val in namefreq.items()]
-        # sort descending in frequency, accending in name
-        namefreq.sort(key = lambda x: (-x[0], x[1]))
-        total = float(sum(count for count, name in namefreq))
+        namefreq = [(key, val) for key, val in namefreq.items()]
+        # sort accending in name
+        namefreq.sort()
+        total = float(sum(count for name, count in namefreq))
 
         tbl = table.Table()
         tbl.addElement(table.TableColumn())
@@ -375,12 +400,12 @@ class OdtWriter(object):
         tbl.addElement(table.TableColumn())
         tbl.addElement(table.TableColumn())
 
-        for count1, name1, count2, name2 in _gencouples(namefreq):
+        for name1, count1, name2, count2 in _gencouples(namefreq):
 
             row = table.TableRow()
             
             cell = table.TableCell()
-            cell.addElement(text.P(text = name1))
+            cell.addElement(text.P(text = name1 or '-'))
             row.addElement(cell)
             
             cell = table.TableCell()
@@ -390,7 +415,7 @@ class OdtWriter(object):
             if count2 is not None:
 
                 cell = table.TableCell()
-                cell.addElement(text.P(text = name2))
+                cell.addElement(text.P(text = name2 or '-'))
                 row.addElement(cell)
                 
                 cell = table.TableCell()

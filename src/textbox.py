@@ -9,6 +9,9 @@ from pysvg import shape, text
 
 from size import Size
 
+
+_log = logging.getLogger(__name__)
+
 class TextBox(object):
     '''
     classdocs
@@ -129,8 +132,8 @@ class TextBox(object):
         
         width = self._width - 2*self._padding
         
-        logging.debug('=========================================================')
-        logging.debug('_splitText: %s width=%s', text, width)
+        _log.debug('=========================================================')
+        _log.debug('_splitText: %s width=%s', text, width)
         
         lines = [] 
         for line in text.split('\n'):
@@ -139,14 +142,14 @@ class TextBox(object):
             while idx+1 < len(words):
                 twowords = ' '.join(words[idx:idx+2])
                 twwidth = self._textWidth(twowords)
-                logging.debug('_splitText: %s width=%s', twowords, twwidth)
+                _log.debug('_splitText: %s width=%s', twowords, twwidth)
                 if twwidth <= width:
                     words[idx:idx+2] = [twowords]
                 else:
                     idx += 1
             lines += words
             
-        logging.debug('_splitText: lines=[%s]', ' | '.join(lines))
+        _log.debug('_splitText: lines=[%s]', ' | '.join(lines))
         return lines
             
 

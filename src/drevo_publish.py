@@ -13,7 +13,6 @@ logging.basicConfig()
 
 from drevo_reader import DrevoReader 
 from odt_writer import OdtWriter
-from size import Size
 from input import FileLocator
 
 def main():
@@ -32,6 +31,8 @@ def main():
                   help="page width of the output document, def: 6in")
     parser.add_option("-M", "--margin", default="0.5in",
                   help="page margins of the output document, def: .5n")
+    parser.add_option("--margin-bottom", default="0.25in",
+                  help="bottom page margin of the output document, def: .25n")
     parser.add_option("-i", "--image-dir", default=None,
                   help="directory with image files")
 
@@ -56,9 +57,11 @@ def main():
 
     writer = OdtWriter(fileFactory,
                        options.output, 
-                       page_width=Size(options.page_width), 
-                       page_height=Size(options.page_height),
-                       margin=Size(options.margin))
+                       page_width=options.page_width, 
+                       page_height=options.page_height,
+                       margin=options.margin,
+                       marginbottom=options.margin_bottom
+                       )
     writer.write(reader)
     
     print "Finished OK"

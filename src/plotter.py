@@ -5,6 +5,7 @@ Created on Sep 22, 2012
 '''
 
 import os
+import logging
 from pysvg import shape, builders, structure
 
 from size import Size
@@ -14,6 +15,7 @@ _rect_style = "fill:none;stroke-width:1pt;stroke:black"
 _rect_unknown_style = "fill:none;stroke-width:1pt;stroke:grey"
 _pline_style = "fill:none;stroke-width:0.5pt;stroke:black"
 
+_log = logging.getLogger(__name__)
 
 class Plotter(object):
 
@@ -52,6 +54,7 @@ class Plotter(object):
 
         # get the number of generations, limit to 4
         ngen = min(_genDepth(person), 4)
+        _log.debug('parent_tree: ngen = %d', ngen)
 
         # if no parents then do not plot anything
         if ngen < 2: return
@@ -85,6 +88,7 @@ class Plotter(object):
                     name = (pers.name.first or '') + ' ' + (pers.name.maiden or pers.name.last or '') 
                 else:
                     name = (pers.name.first or '') + ' ' + (pers.name.last or '')
+                _log.debug('parent_tree: gen = %d; name = %s', gen, name)
                 box = TextBox(text=name, x0=x0, width=box_width, font_size=font_size, rect_style=style)
                 boxes[0].append(box)
 
