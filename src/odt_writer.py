@@ -81,17 +81,24 @@ class OdtWriter(object):
 
 
     def __init__(self, fileFactory, filename, **kw):
+
         self.fileFactory = fileFactory
-        self.filename = filename
+        self.filename = filename         # output file name
+        
+        # page dimensions
         self.page_width = Size(kw.get("page_width", "6in"))
         self.page_height = Size(kw.get("page_height", "9in"))
 
-        margin = kw.get("margin", "0.5in")
-        self.margins = [margin, margin, margin, margin]
-        for margin in range(4):
-            if MARGIN_KW[margin] in kw: self.margins[margin] = kw.get(MARGIN_KW[margin])
+        # set margins, use defaults if none given
+        self.margins = ["0.5in", "0.5in", "0.5in", "0.25in"]
+        margin = kw.get("margin")
+        if margin: self.margins = [margin, margin, margin, margin]
+        for i in range(4):
+            m = kw.get(MARGIN_KW[i])
+            if m: self.margins[i] = m
         self.margins = map(Size, self.margins)
         
+        # starting page number
         self.firstpage = kw.get('firstpage', 1)
                 
     def write(self, model):
@@ -105,7 +112,8 @@ class OdtWriter(object):
                         marginleft=str(self.margins[MARGIN_LEFT]), marginright=str(self.margins[MARGIN_RIGHT]), 
                         margintop=str(self.margins[MARGIN_TOP]), marginbottom=str(self.margins[MARGIN_BOTTOM]))
         pageLayout.addElement(plProp)
-        
+
+        # add page numbers to the footers
         footer = style.Footer()
         foostyle = style.Style(name="Footer", family="paragraph")
         foostyle.addElement(style.ParagraphProperties(textalign='center'))

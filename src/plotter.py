@@ -14,6 +14,7 @@ from textbox import TextBox
 _rect_style = "fill:none;stroke-width:1pt;stroke:black"
 _rect_unknown_style = "fill:none;stroke-width:1pt;stroke:grey"
 _pline_style = "fill:none;stroke-width:0.5pt;stroke:black"
+_pline_unknown_style = "fill:none;stroke-width:0.5pt;stroke:grey"
 
 _log = logging.getLogger(__name__)
 
@@ -76,7 +77,7 @@ class Plotter(object):
         for gen, gen_people in enumerate(generations):
             boxes.insert(0, [])
             
-            x0 = gen*(gen_dist + box_width)
+            x0 = gen*(gen_dist + box_width) + Size('0.5pt')
             
             for pers in gen_people:
                 # displayed persons name
@@ -84,7 +85,7 @@ class Plotter(object):
                 if pers is None:
                     name = '?'
                     style = _rect_unknown_style
-                elif gen == ngen-1:
+                elif gen == 0:
                     name = (pers.name.first or '') + ' ' + (pers.name.maiden or pers.name.last or '') 
                 else:
                     name = (pers.name.first or '') + ' ' + (pers.name.last or '')
@@ -135,13 +136,15 @@ class Plotter(object):
                 x1 = box1.x0
                 y1 = box1.midy
                 midx = (x0 + x1) / 2
-                svg.addElement(shape.line(X1=str(x0), Y1=str(y0), X2=str(midx), Y2=str(y0), style=_pline_style))
-                svg.addElement(shape.line(X1=str(midx), Y1=str(y0), X2=str(midx), Y2=str(y1), style=_pline_style))
-                svg.addElement(shape.line(X1=str(midx), Y1=str(y1), X2=str(x1), Y2=str(y1), style=_pline_style))
+                style = _pline_unknown_style if box1.text == '?' else _pline_style
+                svg.addElement(shape.line(X1=str(x0), Y1=str(y0), X2=str(midx), Y2=str(y0), style=style))
+                svg.addElement(shape.line(X1=str(midx), Y1=str(y0), X2=str(midx), Y2=str(y1), style=style))
+                svg.addElement(shape.line(X1=str(midx), Y1=str(y1), X2=str(x1), Y2=str(y1), style=style))
                 box2 = boxes[gen-1][v*2+1]
                 y1 = box2.midy
-                svg.addElement(shape.line(X1=str(midx), Y1=str(y0), X2=str(midx), Y2=str(y1), style=_pline_style))
-                svg.addElement(shape.line(X1=str(midx), Y1=str(y1), X2=str(x1), Y2=str(y1), style=_pline_style))
+                style = _pline_unknown_style if box2.text == '?' else _pline_style
+                svg.addElement(shape.line(X1=str(midx), Y1=str(y0), X2=str(midx), Y2=str(y1), style=style))
+                svg.addElement(shape.line(X1=str(midx), Y1=str(y1), X2=str(x1), Y2=str(y1), style=style))
 
 
         # generate full XML
