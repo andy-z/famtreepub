@@ -18,6 +18,10 @@ _pline_unknown_style = "fill:none;stroke-width:0.5pt;stroke:grey"
 
 _log = logging.getLogger(__name__)
 
+
+def _personRef(person):
+    return '#person.' + person.id
+
 class Plotter(object):
 
 
@@ -29,7 +33,7 @@ class Plotter(object):
     
 
     
-    def parent_tree(self, person, max_gen=4, width="5in", gen_dist="12pt", font_size="10pt"):
+    def parent_tree(self, person, max_gen=4, width="5in", gen_dist="12pt", font_size="10pt", fullxml=True, refs=False):
         """
         Plot parent tree of a person, max_gen gives the max total number of generations plotted.
         
@@ -63,7 +67,7 @@ class Plotter(object):
         # calculate box sizes
         plot_width = Size(width)
         gen_dist = Size(gen_dist)
-        box_width = (plot_width - (ngen-1)*gen_dist) / ngen
+        box_width = (plot_width - (ngen-1)*gen_dist - Size('2pt')) / ngen
         vmargin = Size("4pt")
         vmargin2 = Size("6pt")
         
@@ -77,7 +81,7 @@ class Plotter(object):
         for gen, gen_people in enumerate(generations):
             boxes.insert(0, [])
             
-            x0 = gen*(gen_dist + box_width) + Size('0.5pt')
+            x0 = gen*(gen_dist + box_width) + Size('1pt')
             
             for pers in gen_people:
                 # displayed persons name
@@ -86,11 +90,12 @@ class Plotter(object):
                     name = '?'
                     style = _rect_unknown_style
                 elif gen == 0:
-                    name = (pers.name.first or '') + ' ' + (pers.name.maiden or pers.name.last or '') 
+                    name = (pers.name.first or '') + ' ' + (pers.name.maiden or pers.name.last or '')
                 else:
                     name = (pers.name.first or '') + ' ' + (pers.name.last or '')
                 _log.debug('parent_tree: gen = %d; name = %s', gen, name)
-                box = TextBox(text=name, x0=x0, width=box_width, font_size=font_size, rect_style=style)
+                href = None if pers is None else _personRef(pers)
+                box = TextBox(text=name, x0=x0, width=box_width, font_size=font_size, rect_style=style, href=href)
                 boxes[0].append(box)
 
         # layout all boxes
@@ -98,7 +103,7 @@ class Plotter(object):
             if gen == 0:
                 
                 # re-calculate vertical positions in last generation
-                y = Size(0)
+                y = Size('1pt')
                 for v, box in enumerate(gen_boxes):
                     box.y0 = y
                     y += box.height
@@ -116,11 +121,11 @@ class Plotter(object):
                     y1 = parents[1].y1
                     box.y0 = (y0+y1)/2 - box.height/2
 
-            # get full height
-            height = boxes[0][-1].y1
+        # get full height
+        height = boxes[0][-1].y1 + Size('1pt')
 
         # produce complete XML
-        svg = structure.svg()
+        svg = structure.svg(width=str(plot_width), height=str(height))
         for gen_boxes in boxes:
             for box in gen_boxes:
                 for element in box.svg():
@@ -148,6 +153,8 @@ class Plotter(object):
 
 
         # generate full XML
-        xml = svg.wrap_xml(svg.getXML(), encoding='UTF-8')
+        xml = svg.getXML()
+        if fullxml:
+            xml = svg.wrap_xml(xml, encoding='UTF-8')
         
         return xml, 'image/svg', width, height

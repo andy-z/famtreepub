@@ -5,7 +5,7 @@ Created on Sep 27, 2012
 '''
 
 import logging
-from pysvg import shape, text
+from pysvg import shape, text, linking
 
 from size import Size
 
@@ -43,6 +43,7 @@ class TextBox(object):
         self._line_spacing = Size(kw.get('line_spacing', '1.5pt'))
         self._rect_style = kw.get('rect_style', '')
         self._text_style = kw.get('text_style', '')
+        self._href = kw.get('href')
 
         # calculate height if needed
         if kw.get('height') is None: self.reflow()
@@ -102,11 +103,19 @@ class TextBox(object):
         rect = shape.rect(**kw)
         shapes.append(rect)
         
+            
+        
         # render text
         kw = dict(text_anchor='middle', font_size=str(self._font_size))
         if self._text_style: kw['style'] = self._text_style
         txt = text.text(**kw)
-        shapes.append(txt)
+        if self._href:
+            a = linking.a()
+            a.addElement(txt)
+            a.set_xlink_href(self._href)
+            shapes.append(a)
+        else:
+            shapes.append(txt)
         for i, line in enumerate(self._lines):
             x = self.midx
             y = self.y0 + self._padding + self._font_size*(i+1) + self._line_spacing*i

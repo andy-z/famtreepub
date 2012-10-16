@@ -1,3 +1,5 @@
 eclipse.preferences.version=1
+encoding//src/gtext.py=utf-8
+encoding//src/html_writer.py=utf-8
 encoding//src/odt_writer.py=utf-8
 encoding//src/textbox.py=utf-8

@@ -16,6 +16,8 @@ from odf import text, style, draw, table
 
 from plotter import Plotter
 from size import Size
+import gtext
+import utils
 
 _log = logging.getLogger(__name__)
 
@@ -39,33 +41,7 @@ def _personCmp(lhs, rhs):
     return _nameCmp(lhs.middle, rhs.middle)
 
 
-def _tr(str, person = None):
-    if str == 'Unknown': return u'Неизвестно'
-    if str == 'Born' and person.sex == 'M': return u'Родился'
-    if str == 'Born' and person.sex == 'F': return u'Родилась'
-    if str == 'Died' and person.sex == 'M': return u'Умер'
-    if str == 'Died' and person.sex == 'F': return u'Умерла'
-    if str == 'Mother': return u'Мать'
-    if str == 'Father': return u'Отец'
-    if str == 'Spouse' and person.sex == 'M': return u'Супруга'
-    if str == 'Spouse' and person.sex == 'F': return u'Супруг'
-    if str == 'kid' and person.sex == 'M': return u'сын'
-    if str == 'kid' and person.sex == 'F': return u'дочь'
-    if str == 'kids': return u'дети'
-    if str == 'Kids': return u'Дети'
-    if str == 'Marriage': return u'Свадьба'
-    if str == 'Spouses and children': return u'Супруги и дети'
-    if str == 'Events and dates': return u'События и даты'
-    if str == 'Ancestor tree': return u'Предки'
-    if str == 'Comments': return u'Комментарии'
-    if str == 'Person List': return u'Персоналии'
-    if str == 'Statistics': return u'Статистика'
-    if str == 'Total Statistics': return u'Общая статистика'
-    if str == 'Name Statistics': return u'Статистика имен'
-    if str == 'Female Name Frequency': return u'Частота женских имен'
-    if str == 'Male Name Frequency': return u'Частота мужских имен'
-    if str == 'Table Of Contents': return u'Оглавление'
-    return str
+_ = gtext.gtext
 
 # indices of margins
 MARGIN_LEFT = 0
@@ -177,8 +153,8 @@ class OdtWriter(object):
         doc.automaticstyles.addElement(treeparastyle)
         
         
-        # generate some stats
-        hdr = _tr("Person List", None)
+        # Title page
+        hdr = _("Person List", None)
         doc.text.addElement(text.H(text=hdr, outlinelevel=1, stylename=h1style))
         doc.text.addElement(text.P(text='', stylename=brstyle))
 
@@ -203,40 +179,40 @@ class OdtWriter(object):
                 p.addElement(imgframe)
             
             # birth date and place
-            p.addText(_tr('Born', person) + ": ")
+            p.addText(_('Born', person) + ": ")
             if person.birth.date: 
                 p.addText(str(person.birth.date))
             else:
-                p.addText(_tr('Unknown', person))
+                p.addText(_('Unknown', person))
             if person.birth.place: 
                 p.addText(", " + person.birth.place)
             doc.text.addElement(p)
 
             # Parents
             if person.mother:
-                p = text.P(text = _tr('Mother', person) + ": " + person.mother.name.full)
+                p = text.P(text = _('Mother', person) + ": " + person.mother.name.full)
                 doc.text.addElement(p)
             if person.father:
-                p = text.P(text = _tr('Father', person) + ": " + person.father.name.full)
+                p = text.P(text = _('Father', person) + ": " + person.father.name.full)
                 doc.text.addElement(p)
 
 
             # spouses and children
             own_kids = []
             if person.spouses:
-                hdr = _tr("Spouses and children", person)
+                hdr = _("Spouses and children", person)
                 doc.text.addElement(text.H(text=hdr, outlinelevel=3, stylename=h3style))
             for spouse in person.spouses:
                 _log.debug('spouse = %s; children ids = %s; children = %s', spouse, spouse._children, spouse.children)
                 if spouse.person:
-                    p = text.P(text = _tr('Spouse', person) + ": " + spouse.person.name.full)
+                    p = text.P(text = _('Spouse', person) + ": " + spouse.person.name.full)
                     kids = [c.name.first for c in spouse.children]
-                    if kids: p.addText("; " + _tr('kids', '') + ': ' + ', '.join(kids))
+                    if kids: p.addText("; " + _('kids', '') + ': ' + ', '.join(kids))
                     doc.text.addElement(p)
                 else:
                     own_kids += [c.name.first for c in spouse.children]
             if own_kids: 
-                p = text.P(text = _tr('Kids', '') + ': ' + ', '.join(own_kids))
+                p = text.P(text = _('Kids', '') + ': ' + ', '.join(own_kids))
                 doc.text.addElement(p)
 
             # All relevant dates
@@ -245,25 +221,25 @@ class OdtWriter(object):
                 
                 # marriage date if known
                 if spouse.marriage.date: 
-                    descr = _tr('Marriage', person) 
+                    descr = _('Marriage', person) 
                     if spouse.person:
-                        descr += ", " + _tr('Spouse', person) + ": "  + spouse.person.name.maiden_full
+                        descr += ", " + _('Spouse', person) + ": "  + spouse.person.name.maiden_full
                     events.append((spouse.marriage.date, descr))
 
                 # kids birth dates
                 for kid in spouse.children:
                     if kid.birth.date:
-                        descr = _tr('Born', kid) + " " + _tr('kid', kid) + " " + kid.name.first
+                        descr = _('Born', kid) + " " + _('kid', kid) + " " + kid.name.first
                         events.append((kid.birth.date, descr))
 
             if person.death.date:
-                descr = _tr('Died', person)
-                if person.death.place: p.addText(", " + person.death.place)
+                descr = _('Died', person)
+                if person.death.place: descr += ", " + person.death.place
                 events.append((person.death.date, descr))
                     
             events.sort()
             if events:
-                hdr = _tr("Events and dates", person)
+                hdr = _("Events and dates", person)
                 doc.text.addElement(text.H(text=hdr, outlinelevel=3, stylename=h3style))
             for evt in events:
                 p = text.P(text = str(evt[0]) + ": " + evt[1])
@@ -272,7 +248,7 @@ class OdtWriter(object):
 
             # Comments are published as set of paragraphs
             if person.comment:
-                hdr = _tr("Comments", person)
+                hdr = _("Comments", person)
                 doc.text.addElement(text.H(text=hdr, outlinelevel=3, stylename=h3style))
 
                 doc.text.addElement(text.P())
@@ -280,9 +256,9 @@ class OdtWriter(object):
                     doc.text.addElement(text.P(text = para))
                     
             # plot ancestors tree
-            tree_elem = self._getParentTree(person, doc, treetablestyle, treecellstyle, treeparastyle)
+            tree_elem = self._getParentTree(person, doc)
             if tree_elem:
-                hdr = _tr("Ancestor tree", person)
+                hdr = _("Ancestor tree", person)
                 doc.text.addElement(text.H(text=hdr, outlinelevel=3, stylename=h3style))
                 p = text.P()
                 p.addElement(tree_elem)
@@ -290,31 +266,31 @@ class OdtWriter(object):
 
 
         # generate some stats
-        hdr = _tr("Statistics", None)
+        hdr = _("Statistics", None)
         doc.text.addElement(text.H(text=hdr, outlinelevel=1, stylename=h1style))
         doc.text.addElement(text.P(text='', stylename=brstyle))
 
-        hdr = _tr("Total Statistics", None)
+        hdr = _("Total Statistics", None)
         doc.text.addElement(text.H(text=hdr, outlinelevel=2, stylename=h2style))
         nmales = len([person for person in people if person.sex == 'M'])
         nfemales = len([person for person in people if person.sex == 'F'])
-        p = text.P(text = '%s: %d' % (_tr('Всего персон'), len(people)))
+        p = text.P(text = '%s: %d' % (_('Всего персон'), len(people)))
         doc.text.addElement(p)
-        p = text.P(text = '%s: %d' % (_tr('Женского пола'), nfemales))
+        p = text.P(text = '%s: %d' % (_('Женского пола'), nfemales))
         doc.text.addElement(p)
-        p = text.P(text = '%s: %d' % (_tr('Мужского пола'), nmales))
+        p = text.P(text = '%s: %d' % (_('Мужского пола'), nmales))
         doc.text.addElement(p)
 
 
-        hdr = _tr("Name Statistics", None)
+        hdr = _("Name Statistics", None)
         doc.text.addElement(text.H(text=hdr, outlinelevel=2, stylename=h2style))
 
-        hdr = _tr("Female Name Frequency", None)
+        hdr = _("Female Name Frequency", None)
         doc.text.addElement(text.H(text=hdr, outlinelevel=3, stylename=h3style))
         elem = self._namestat(person for person in people if person.sex == 'F')
         doc.text.addElement(elem)
         
-        hdr = _tr("Male Name Frequency", None)
+        hdr = _("Male Name Frequency", None)
         doc.text.addElement(text.H(text=hdr, outlinelevel=3, stylename=h3style))
         elem = self._namestat(person for person in people if person.sex == 'M')
         doc.text.addElement(elem)
@@ -323,7 +299,7 @@ class OdtWriter(object):
         doc.text.addElement(text.P(text='', stylename=brstyle))
         toc = text.TableOfContent(name='TOC')
         tocsrc = text.TableOfContentSource(outlinelevel=2)
-        toctitle = text.IndexTitleTemplate(text = _tr('Table Of Contents'))
+        toctitle = text.IndexTitleTemplate(text = _('Table Of Contents'))
         tocsrc.addElement(toctitle)
         toc.addElement(tocsrc)
         doc.text.addElement(toc)
@@ -348,18 +324,14 @@ class OdtWriter(object):
             filename = "Pictures/" + hashlib.sha1(imgdata).hexdigest() + '.' +img.format
 
             # calculate size of the frame
-            h = 2.
-            w = h / img.size[1] * img.size[0]
-            if w > 2.5:
-                w = 2.5
-                h = w / img.size[0] * img.size[1]
+            w, h = utils.resize(img.size, (2.5, 2.5))
             frame = draw.Frame(width="%.3fin"%w, height="%.3fin"%h)
             imgref = doc.addPicture(filename, "image/"+img.format, imgdata)
             frame.addElement(draw.Image(href=imgref))
             return frame
         
         
-    def _getParentTree(self, person, doc, tablestyle, treecellstyle, treeparastyle):
+    def _getParentTree(self, person, doc):
         '''
         Returns element containg parent tree or None
         '''

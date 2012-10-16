@@ -13,6 +13,7 @@ logging.basicConfig()
 
 from drevo_reader import DrevoReader 
 from odt_writer import OdtWriter
+from html_writer import HtmlWriter
 from input import FileLocator
 
 def main():
@@ -35,6 +36,8 @@ def main():
                   help="bottom page margin of the output document, def: .25n")
     parser.add_option("-i", "--image-dir", default=None,
                   help="directory with image files")
+    parser.add_option("-t", "--type", default='odf',
+                  help="type of output file, one of odf, html; def: odf")
 
     (options, args) = parser.parse_args()
     if len(args) != 1:
@@ -46,22 +49,24 @@ def main():
     elif options.verbose > 1:
         logging.getLogger().setLevel(logging.DEBUG)
 
-    # make output file name
-    if not options.output:
-        options.output = os.path.basename(args[0]) + '.odt'
-
     # inctantiate file locator
     fileFactory = FileLocator(args[0], imagedir=options.image_dir)
 
     reader = DrevoReader(fileFactory)
 
-    writer = OdtWriter(fileFactory,
-                       options.output, 
-                       page_width=options.page_width, 
-                       page_height=options.page_height,
-                       margin=options.margin,
-                       marginbottom=options.margin_bottom
-                       )
+    if options.type == 'odf':
+        if not options.output: options.output = os.path.basename(args[0]) + '.odt'
+        writer = OdtWriter(fileFactory,
+                           options.output, 
+                           page_width=options.page_width, 
+                           page_height=options.page_height,
+                           margin=options.margin,
+                           marginbottom=options.margin_bottom
+                           )
+    elif options.type == 'html':
+        if not options.output: options.output = os.path.basename(args[0]) + '.html'
+        writer = HtmlWriter(fileFactory, options.output, page_width=options.page_width)
+        
     writer.write(reader)
     
     print "Finished OK"
