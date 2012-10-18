@@ -46,7 +46,7 @@ def _personRef(person, name=None):
     
 
 _style = '''
-<style type="text/css">
+<style type="text/css" media="screen" >
 body {
   background-color: #bbbbbb;
 }
@@ -83,13 +83,59 @@ h3 {
   font-weight: normal;
   font-style: italic;
 }
+.svglink:hover {
+  fill:red;
+}
+</style>
+
+<style type="text/css" media="print" >
+body {
+  background-color: white;
+}
+#contents_div {
+  padding: 1em;
+  width: 90%%;
+  margin:auto;
+}
+a { text-decoration:   none; }
+a:visited { color: black; }
+a:link { color: black; }
+a:hover { color: red; }
+h1 {
+  text-align: center;
+  width: 100%%;
+  padding: 4px 0px 4px 0px;
+  page-break-before: always;
+  border: solid black 1pt; 
+}
+h2 {
+  text-align: center;
+  width: 100%%;
+  padding: 4px 0px 4px 0px;
+}
+h3 {
+  text-align: center;
+  font-weight: normal;
+  font-style: italic;
+}
+</style>
+
+<style type="text/css" media="all" >
 img.personImage {
-  box-shadow: 4px 4px 4px #555;
+  border-radius: 6px;
+  box-shadow: 2px 2px 10px #555;
   float: right;
   margin: 0px 0px 10px 10px;
+  padding: 6px 6px 6px 6px;
 }
 table.statTable {
   margin:auto;
+  width: 80%%;
+}
+.centered {
+  margin:auto;
+  width: -moz-max-content;
+  width: max-content;
 }
 </style>
 '''
@@ -211,7 +257,9 @@ class HtmlWriter(object):
             tree_elem = self._getParentTree(person)
             if tree_elem:
                 doc += ['<h3>' + _("Ancestor tree", person) + '</h3>\n']
+                doc += ['<div class="centered">\n']
                 doc += [tree_elem]
+                doc += ['</div>\n']
             else:
                 doc += ['<svg width="100%" height="1pt"/>\n']
                 
@@ -299,8 +347,8 @@ class HtmlWriter(object):
 
         width = self.page_width
 
-        plotter = Plotter()
-        img = plotter.parent_tree(person, width=width, gen_dist="12pt", font_size="9pt", fullxml=False, refs=True)
+        plotter = Plotter(width=width, gen_dist="12pt", font_size="9pt", fullxml=False, refs=True)
+        img = plotter.parent_tree(person)
         if img is None: return
 
         # if not None then 4-tuple

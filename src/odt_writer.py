@@ -137,6 +137,11 @@ class OdtWriter(object):
                                                     marginleft="0.1in", marginbottom="0.1in"))
         doc.automaticstyles.addElement(imgstyle)
 
+        # centered paragraph
+        centered = style.Style(name="centered", family="paragraph")
+        centered.addElement(style.ParagraphProperties(textalign='center'))
+        doc.styles.addElement(centered)
+
         # style for tree table
         treetablestyle = style.Style(name="TreeTableStyle", family="table")
         treetablestyle.addElement(style.TableProperties(align='center'))
@@ -260,7 +265,7 @@ class OdtWriter(object):
             if tree_elem:
                 hdr = _("Ancestor tree", person)
                 doc.text.addElement(text.H(text=hdr, outlinelevel=3, stylename=h3style))
-                p = text.P()
+                p = text.P(stylename=centered)
                 p.addElement(tree_elem)
                 doc.text.addElement(p)
 
@@ -338,8 +343,8 @@ class OdtWriter(object):
 
         width = self.page_width - self.margins[MARGIN_LEFT] - self.margins[MARGIN_RIGHT]
 
-        plotter = Plotter()
-        img = plotter.parent_tree(person, width=width, gen_dist="12pt", font_size="9pt")
+        plotter = Plotter(width=width, gen_dist="12pt", font_size="9pt")
+        img = plotter.parent_tree(person)
         if img is None: return
 
         # if not None then 4-tuple

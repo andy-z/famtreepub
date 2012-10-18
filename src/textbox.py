@@ -35,6 +35,7 @@ class TextBox(object):
         self._x0 = Size(kw.get('x0', 0))
         self._y0 = Size(kw.get('y0', 0))
         self._width = Size(kw.get('width', 0))
+        self._maxwidth = Size(kw.get('maxwidth', 0))
         self._height = Size(kw.get('height', 0))
         self._text = kw.get('text', '')
         self._lines = self._text.split('\n')
@@ -68,8 +69,9 @@ class TextBox(object):
     @property
     def midy(self): return self._y0 + self._height/2
 
-    @property
-    def width(self): return self._width
+    def _getWidth(self): return self._width
+    def _setWidth(self, w): self._width = w
+    width = property(_getWidth, _setWidth)
 
     @property
     def height(self): return self._height
@@ -92,7 +94,7 @@ class TextBox(object):
         self._y0 = Size(y0)
 
 
-    def svg(self):
+    def svg(self, textclass=None):
         ''' Produces list of SVG elements (pysvg obejcts) '''
         
         shapes = []
@@ -108,6 +110,7 @@ class TextBox(object):
         # render text
         kw = dict(text_anchor='middle', font_size=str(self._font_size))
         if self._text_style: kw['style'] = self._text_style
+        if textclass: kw['class'] = textclass
         txt = text.text(**kw)
         if self._href:
             a = linking.a()
@@ -141,8 +144,29 @@ class TextBox(object):
         
         width = self._width - 2*self._padding
         
-        _log.debug('=========================================================')
-        _log.debug('_splitText: %s width=%s', text, width)
+        #_log.debug('=========================================================')
+        #_log.debug('_splitText: %s width=%s', text, width)
+        
+        lines = self._splitText1(text, width)
+            
+        #_log.debug('_splitText: lines=[%s]', ' | '.join(lines))
+        
+        if len(lines) > 1 and self._maxwidth > Size():
+            # try to increase box width up to a maximum allowed width
+            
+            width = self._maxwidth - 2*self._padding
+            lines1 = self._splitText1(text, width)
+
+            if len(lines1) < len(lines):
+                self._width = max(self._textWidth(line) for line in lines1) + 2*self._padding
+                return lines1
+        
+        return lines
+            
+    def _splitText1(self, text, width):
+        ''' 
+        Tries to split a line of text into a number of lines which fit into box width.
+        '''
         
         lines = [] 
         for line in text.split('\n'):
@@ -151,16 +175,14 @@ class TextBox(object):
             while idx+1 < len(words):
                 twowords = ' '.join(words[idx:idx+2])
                 twwidth = self._textWidth(twowords)
-                _log.debug('_splitText: %s width=%s', twowords, twwidth)
+                #_log.debug('_splitText1: %s width=%s', twowords, twwidth)
                 if twwidth <= width:
                     words[idx:idx+2] = [twowords]
                 else:
                     idx += 1
             lines += words
             
-        _log.debug('_splitText: lines=[%s]', ' | '.join(lines))
         return lines
-            
 
     def _textWidth(self, text):
         ''' Calculates approximate width of the string of text '''

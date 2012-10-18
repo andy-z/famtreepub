@@ -55,7 +55,7 @@ def main():
     reader = DrevoReader(fileFactory)
 
     if options.type == 'odf':
-        if not options.output: options.output = os.path.basename(args[0]) + '.odt'
+        if not options.output: options.output = os.path.splitext(os.path.basename(args[0]))[0] + '.odt'
         writer = OdtWriter(fileFactory,
                            options.output, 
                            page_width=options.page_width, 
@@ -64,7 +64,7 @@ def main():
                            marginbottom=options.margin_bottom
                            )
     elif options.type == 'html':
-        if not options.output: options.output = os.path.basename(args[0]) + '.html'
+        if not options.output: options.output = os.path.splitext(os.path.basename(args[0]))[0] + '.html'
         writer = HtmlWriter(fileFactory, options.output, page_width=options.page_width)
         
     writer.write(reader)
