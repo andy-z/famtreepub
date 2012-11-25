@@ -88,5 +88,8 @@ mail.settings.login = settings.email_login
 
 db.define_table('input_data',
                 Field('input_file', 'upload', autodelete=True, requires=IS_NOT_EMPTY()),
-                Field('output_type', default="OpenDocument", requires=IS_IN_SET(['OpenDocument', 'HTML'])))
+                Field('output_type', default="OpenDocument", requires=IS_IN_SET(['OpenDocument', 'HTML'])),
+                Field('original_name', writable=False, readable=False),
+                Field('created', 'datetime', writable=False, readable=False),
+                )
 

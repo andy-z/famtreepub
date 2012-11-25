@@ -1,3 +1,5 @@
+from gluon.custom_import import track_changes; track_changes(True)
+
 from gluon.storage import Storage
 settings = Storage()
 

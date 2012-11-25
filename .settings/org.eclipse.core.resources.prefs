@@ -1,4 +1,7 @@
 eclipse.preferences.version=1
+encoding//controllers/default.py=utf-8
+encoding//languages/default.py=utf8
+encoding//models/db.py=utf-8
 encoding//modules/gtext.py=utf-8
 encoding//modules/html_writer.py=utf-8
 encoding//modules/odt_writer.py=utf-8

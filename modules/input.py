@@ -55,24 +55,27 @@ class _FSLocator(_FileLocator):
     on a regular filesystem.
     '''
     
-    def __init__(self, xmlpath, imgdir=None):
+    def __init__(self, inputFile, imgdir=None):
         '''
-        Constructor takes one required argument xmlpath which specifies the location 
-        of XML file. Optional argument imgdir specifies location of image files.
+        Constructor takes one required argument which can be either file name
+        or file-like object. Optional argument imgdir specifies location of image files.
         If `imgdir` is not specified or None then images are looked up in the same 
         directory as XML file or its sub-directories.
         '''
         
-        self._xml = xmlpath
-        self._xmldir = os.path.basename(xmlpath)
+        self._inputFile = inputFile
         self._imgdir = imgdir
         self._images = None
         
     def openXML(self):
         '''Returns file object for the input XML file.'''
         
-        _log.debug("_FSLocator.openXML: "+self._xml)
-        return open(self._xml, 'rU')
+        _log.debug("_FSLocator.openXML")
+        if hasattr(self._inputFile, 'read'):
+            # it's likely a file
+            return self._inputFile
+        else:
+            return open(self._inputFile, 'rU')
     
     def openImage(self, name):
         '''Returns file object for the named image file.''' 
@@ -92,9 +95,12 @@ class _FSLocator(_FileLocator):
         else:
             if self._images is None:
                 # make the list of files in the XML directory and all sub-directories
-                dir = os.path.dirname(self._xml)
-                _log.debug("_FSLocator.openImage: recursively scan directory "+dir)
-                self._images = list(os.walk(dir))
+                if hasattr(self._inputFile, 'read'):
+                    self._images = []
+                else:
+                    dir = os.path.dirname(self._xml)
+                    _log.debug("_FSLocator.openImage: recursively scan directory "+dir)
+                    self._images = list(os.walk(dir))
             matches = [os.path.join(dir, name) for dir, x, files in self._images if name in files]
             if not matches:
                 _log.debug("_FSLocator.openImage: nothing found")
@@ -113,14 +119,14 @@ class _ZipLocator(_FileLocator):
     in zip archive.
     '''
     
-    def __init__(self, path):
+    def __init__(self, inputFile):
         '''
-        Constructor takes one required argument path which specifies the location 
-        of zip archive.
+        Constructor takes one required argument which can be either file name
+        or file-like object.
         '''
         
         # read zip file contents
-        self._zip = zipfile.ZipFile(path, 'r')
+        self._zip = zipfile.ZipFile(inputFile, 'r')
         self._toc = self._zip.namelist()
         
     def openXML(self):
@@ -147,7 +153,8 @@ class _ZipLocator(_FileLocator):
 def FileLocator(inputFile, **kw):
     '''
     For a given input file (which can be XML file or some archive) return
-    corresponding file locator (file factory) object. 
+    corresponding file locator (file factory) object. Argument
+    can be either file name of file-like object.
     
     Optional keyword arguments accepted:
     imagedir: location of the image files, only makes sense if input is XML file,
@@ -155,8 +162,12 @@ def FileLocator(inputFile, **kw):
             file or its sub-directories
     '''
     
-    if inputFile.endswith('.xml'):
-        return _FSLocator(inputFile, kw.get('imagedir', None))
-    elif inputFile.endswith(('.zip', '.ZIP')):
+    if zipfile.is_zipfile(inputFile):
         return _ZipLocator(inputFile)
-    
+    elif hasattr(inputFile, 'read'):
+        inputFile.seek(0)
+        return _FSLocator(inputFile, kw.get('imagedir', None))
+    elif os.path.exists(inputFile):
+        return _FSLocator(inputFile, kw.get('imagedir', None))
+    else:
+        return None

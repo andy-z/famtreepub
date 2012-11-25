@@ -130,4 +130,5 @@ To start publisher you need to upload family information. Publisher accepts two 
 'options_page_body': '''\
 Please review and update options which control the output.
 ''',
+'file_validation_failed': 'Unknown file format, check file and try again.'
 }
