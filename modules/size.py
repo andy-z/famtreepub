@@ -23,7 +23,7 @@ class Size(object):
         
         If input value has numeric type then it is assumed to be size in inches.
         If input value is a string then it should be a floating number followed 
-        by optional suffix (one of pt, in, mm, cm). Fithout suffix the number gives
+        by optional suffix (one of pt, in, mm, cm). Without suffix the number gives
         size in inches.
         
         If string does not have correct format then ValueError is raised. 

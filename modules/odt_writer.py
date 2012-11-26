@@ -48,7 +48,7 @@ MARGIN_LEFT = 0
 MARGIN_RIGHT = 1
 MARGIN_TOP = 2
 MARGIN_BOTTOM = 3
-MARGIN_KW = ['marginleft', 'marginright', 'margintop', 'marginbottom']
+MARGIN_KW = ['margin_left', 'margin_right', 'margin_top', 'margin_bottom']
 
 class OdtWriter(object):
     '''
@@ -56,26 +56,20 @@ class OdtWriter(object):
     '''
 
 
-    def __init__(self, fileFactory, output, **kw):
+    def __init__(self, fileFactory, output, config):
 
         self.fileFactory = fileFactory
         self.output = output         # output file name or file object
         
         # page dimensions
-        self.page_width = Size(kw.get("page_width", "6in"))
-        self.page_height = Size(kw.get("page_height", "9in"))
+        self.page_width = config.getSize("page_width")
+        self.page_height = config.getSize("page_height")
 
         # set margins, use defaults if none given
-        self.margins = ["0.5in", "0.5in", "0.5in", "0.25in"]
-        margin = kw.get("margin")
-        if margin: self.margins = [margin, margin, margin, margin]
-        for i in range(4):
-            m = kw.get(MARGIN_KW[i])
-            if m: self.margins[i] = m
-        self.margins = map(Size, self.margins)
+        self.margins = [config.getSize(MARGIN_KW[i]) for i in range(4)]
         
         # starting page number
-        self.firstpage = kw.get('firstpage', 1)
+        self.firstpage = config.get('first_page')
                 
     def write(self, model):
         

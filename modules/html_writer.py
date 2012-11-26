@@ -147,13 +147,13 @@ class HtmlWriter(object):
     '''
 
 
-    def __init__(self, fileFactory, output, **kw):
+    def __init__(self, fileFactory, output, config):
 
         self.fileFactory = fileFactory
         self.output = output         # output file name or file object
         
-        # page dimensions
-        self.page_width = Size(kw.get("page_width", "800px"))
+        # parameters
+        self.config = config
                 
     def write(self, model):
 
@@ -163,7 +163,7 @@ class HtmlWriter(object):
         doc += ['<html>', '<head>']
         doc += ['<meta http-equiv="Content-Type" content="text/html; charset=utf-8">\n']
         doc += ['<title>', 'Family Tree', '</title>\n']
-        doc += [_style % self.__dict__]
+        doc += [_style % self.config]
         doc += ['</head>\n', '<body>\n']
         doc += ['<div id="contents_div"/>\n']
         
@@ -350,7 +350,7 @@ class HtmlWriter(object):
         Returns element containg parent tree or None
         '''
 
-        width = self.page_width
+        width = self.config.getSize('page_width')
 
         plotter = Plotter(width=width, gen_dist="12pt", font_size="9pt", fullxml=False, refs=True)
         img = plotter.parent_tree(person)

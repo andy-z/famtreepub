@@ -127,7 +127,10 @@ To start publisher you need to upload family information. Publisher accepts two 
 - ZIP file which contains XML file and images (File .. Export ..XML, export photographs, and make ZIP file from a whole directory)
 ''',
 'options_page_title': 'Options for output format',
-'options_page_body': '''\
+'options_odt_page_body': '''\
+Please review and update options which control the output.
+''',
+'options_html_page_body': '''\
 Please review and update options which control the output.
 ''',
 'file_validation_failed': 'Unknown file format, check file and try again.'
