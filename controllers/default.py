@@ -9,8 +9,13 @@ import os
 import logging
 import datetime
 from StringIO import StringIO
+import tempfile
 
+from drevo_reader import DrevoReader 
+from input import FileLocator
 import validator
+from odt_writer import OdtWriter
+from html_writer import HtmlWriter
 
 
 def _optval(name, defval):
@@ -62,25 +67,55 @@ def options():
     
     options = []
     options += [('Units: ', SELECT('in', 'cm', 'mm', 'pt', _name='units', value=_optval('units', 'in'), _style='width: 80px'))]
-    options += [('Page width: ', INPUT(_type='number', _name='page_width', _style='width: 40px', _value='8.5'))]
+    options += [('Page width: ', INPUT(_type='number', _name='page_width', _style='width: 40px', _value=_optval('page_width', '8.5')))]
     if input_data.output_type == 'OpenDocument':
-        options += [('Page height: ', INPUT(_type='number', _name='page_height', _style='width: 40px', _value='11'))]
-
-    options += [('Margins: ', 
-                 TABLE(TR(INPUT(_type='number', _name='margin_left', _style='width: 30px', _value=_optval('margin_left', '0.5')),
-                          DIV(INPUT(_type='number', _name='margin_top', _style='width: 30px', _value='0.5'),
-                              BR(),
-                              INPUT(_type='number', _name='margin_bottom', _style='width: 30px', _value='0.5')
-                              ),
-                          INPUT(_type='number', _name='margin_right', _style='width: 30px', _value='0.5'),
-                          )))]
+        options += [('Page height: ', INPUT(_type='number', _name='page_height', _style='width: 40px', _value=_optval('page_height', '11')))]
+        options += [('Margins: ', 
+                     TABLE(TR(INPUT(_type='number', _name='margin_left', _style='width: 30px', _value=_optval('margin_left', '0.5')),
+                              DIV(INPUT(_type='number', _name='margin_top', _style='width: 30px', _value=_optval('margin_top', '0.5')),
+                                  BR(),
+                                  INPUT(_type='number', _name='margin_bottom', _style='width: 30px', _value=_optval('margin_bottom', '0.5'))
+                                  ),
+                              INPUT(_type='number', _name='margin_right', _style='width: 30px', _value=_optval('margin_right', '0.5')),
+                              )))]
     
     options += [(INPUT(_value='Start', _type='submit'), )]
     
     form = FORM(TABLE(*[TR(*opt) for opt in options]))
     
     if form.process().accepted:
+        
+        # remember options
         session.options = form.vars
+        
+        # convert it
+        floc = FileLocator(os.path.join(request.folder, 'uploads', input_data.input_file))
+        reader = DrevoReader(floc)
+
+        output = tempfile.TemporaryFile()
+        if input_data.output_type == 'OpenDocument':
+            output_name = os.path.splitext(input_data.original_name)[0] + '.odt'
+            content_type = 'application/vnd.oasis.opendocument.text'
+            writer = OdtWriter(floc,
+                               output, 
+                               page_width=form.vars.page_width+form.vars.units, 
+                               page_height=form.vars.page_height+form.vars.units,
+                               marginleft=form.vars.margin_left+form.vars.units,
+                               margintop=form.vars.margin_top+form.vars.units,
+                               marginbottom=form.vars.margin_bottom+form.vars.units,
+                               marginright=form.vars.margin_right+form.vars.units
+                               )
+        else:
+            output_name = os.path.splitext(input_data.original_name)[0] + '.html'
+            content_type = 'text/html'
+            writer = HtmlWriter(floc, output, page_width=form.vars.page_width+form.vars.units)
+        
+        writer.write(reader)
+
+        # send the file
+        output.seek(0)
+        response.headers = {'Content-type': content_type}
+        return response.stream(output, 1048576, attachment=True, filename=output_name)
         
     return dict(form=form)
 

@@ -31,4 +31,7 @@ def gtext(str, person = None):
     if str == 'Female Name Frequency': return u'Частота женских имен'
     if str == 'Male Name Frequency': return u'Частота мужских имен'
     if str == 'Table Of Contents': return u'Оглавление'
+    if str == 'Person count': return u'Всего персон'
+    if str == 'Female count': return u'Женского пола'
+    if str == 'Male count': return u'Мужского пола'
     return str

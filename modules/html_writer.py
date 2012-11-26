@@ -42,7 +42,7 @@ def _personCmp(lhs, rhs):
 
 def _personRef(person, name=None):
     if name is None: name = person.name.full
-    return '<a href="#person.{0}">{1}</a>'.format(person.id, name)
+    return u'<a href="#person.{0}">{1}</a>'.format(person.id, name)
     
 
 _style = '''
@@ -147,10 +147,10 @@ class HtmlWriter(object):
     '''
 
 
-    def __init__(self, fileFactory, filename, **kw):
+    def __init__(self, fileFactory, output, **kw):
 
         self.fileFactory = fileFactory
-        self.filename = filename         # output file name
+        self.output = output         # output file name or file object
         
         # page dimensions
         self.page_width = Size(kw.get("page_width", "800px"))
@@ -167,7 +167,7 @@ class HtmlWriter(object):
         doc += ['</head>\n', '<body>\n']
         doc += ['<div id="contents_div"/>\n']
         
-        doc += ['<h1 id="personList">{0}</h1>\n'.format(_("Person List", None))]
+        doc += [u'<h1 id="personList">{0}</h1>\n'.format(_("Person List"))]
         toc += [(1, 'personList', _("Person List"))]
         
         # sort people according to last name, first name, middle name, missing
@@ -180,7 +180,7 @@ class HtmlWriter(object):
             _log.debug('Processing %s', person)            
 
             # page title
-            doc += ['<h2 id="person.{0}">{1}</h2>\n'.format(person.id, person.name.full)]
+            doc += [u'<h2 id="person.{0}">{1}</h2>\n'.format(person.id, person.name.full)]
             toc += [(2, 'person.'+person.id, person.name.full)]
 
             img = self._getMainImage(model, person)
@@ -265,30 +265,30 @@ class HtmlWriter(object):
                 
                 
         # generate some stats
-        doc += ['<h1 id="statistics">{0}</h1>\n'.format(_("Statistics"))]
+        doc += [u'<h1 id="statistics">{0}</h1>\n'.format(_("Statistics"))]
         toc += [(1, 'statistics', _("Statistics"))]
 
-        doc += ['<h2 id="total_statistics">{0}</h2>\n'.format(_("Total Statistics"))]
+        doc += [u'<h2 id="total_statistics">{0}</h2>\n'.format(_("Total Statistics"))]
         toc += [(2, 'total_statistics', _("Total Statistics"))]
 
         nmales = len([person for person in people if person.sex == 'M'])
         nfemales = len([person for person in people if person.sex == 'F'])
-        doc += ['<p>%s: %d</p>' % (_('Всего персон'), len(people))]
-        doc += ['<p>%s: %d</p>' % (_('Женского пола'), nfemales)]
-        doc += ['<p>%s: %d</p>' % (_('Мужского пола'), nmales)]
+        doc += ['<p>%s: %d</p>' % (_('Person count'), len(people))]
+        doc += ['<p>%s: %d</p>' % (_('Female count'), nfemales)]
+        doc += ['<p>%s: %d</p>' % (_('Male count'), nmales)]
 
 
-        doc += ['<h2 id="name_statistics">{0}</h2>\n'.format(_("Name Statistics"))]
+        doc += [u'<h2 id="name_statistics">{0}</h2>\n'.format(_("Name Statistics"))]
         toc += [(2, 'name_statistics', _("Name Statistics"))]
 
-        doc += ['<h3 id="female_name_freq">{0}</h3>\n'.format(_("Female Name Frequency"))]
+        doc += [u'<h3 id="female_name_freq">{0}</h3>\n'.format(_("Female Name Frequency"))]
         doc += self._namestat(person for person in people if person.sex == 'F')
         
-        doc += ['<h3 id="male_name_freq">{0}</h3>\n'.format(_("Male Name Frequency"))]
+        doc += [u'<h3 id="male_name_freq">{0}</h3>\n'.format(_("Male Name Frequency"))]
         doc += self._namestat(person for person in people if person.sex == 'M')
 
         # add table of contents
-        doc += ['<h1>{0}</h1>\n'.format(_("Table Of Contents"))]
+        doc += [u'<h1>{0}</h1>\n'.format(_("Table Of Contents"))]
         lvl = 0
         for toclvl, tocid, text in toc:
             while lvl < toclvl:
@@ -297,7 +297,7 @@ class HtmlWriter(object):
             while lvl > toclvl:
                 doc += ['</ul>']
                 lvl -= 1
-            doc += ['<li><a href="#{0}">{1}</a></li>\n'.format(tocid, text)]
+            doc += [u'<li><a href="#{0}">{1}</a></li>\n'.format(tocid, text)]
         while lvl > 0:
             doc += ['</ul>']
             lvl -= 1
@@ -306,10 +306,14 @@ class HtmlWriter(object):
         doc += ['</body>']
         doc += ['</html>']
         
-        out = file(self.filename, 'w')
-        for line in doc:
-            out.write(line.encode('utf_8'))
-        out.close()
+        if hasattr(self.output, 'write'):
+            for line in doc:
+                self.output.write(unicode(line).encode('utf-8'))
+        else:
+            out = file(self.output, 'w')
+            for line in doc:
+                out.write(unicode(line).encode('utf-8'))
+            out.close()
 
 
     def _getMainImage(self, model, person, maxsize = (300, 300)):
@@ -322,22 +326,23 @@ class HtmlWriter(object):
             
             # find image file, get its data
             imgfile = self.fileFactory.openImage(photos[0].file)
-            imgdata = imgfile.read()
-            imgfile = StringIO(imgdata)
-            img = Image.open(imgfile)
-            
-            # resize it if larger than needed
-            size = utils.resize(img.size, maxsize)
-            if size != img.size:
-                _log.debug('Resize image to %s', size)
-                img = img.resize(size, Image.ANTIALIAS)
+            if imgfile:
+                imgdata = imgfile.read()
+                imgfile = StringIO(imgdata)
+                img = Image.open(imgfile)
+                
+                # resize it if larger than needed
+                size = utils.resize(img.size, maxsize)
+                if size != img.size:
+                    _log.debug('Resize image to %s', size)
+                    img = img.resize(size, Image.ANTIALIAS)
+    
+                # save to a buffer
+                imgfile = StringIO()
+                img.save(imgfile, 'JPEG')
+                imgfile.seek(0)
 
-            # save to a buffer
-            imgfile = StringIO()
-            img.save(imgfile, 'JPEG')
-            imgfile.seek(0)
-
-            return '<img class="personImage" src="data:image/jpg;base64,' + base64.b64encode(imgfile.read()) + '">'
+                return '<img class="personImage" src="data:image/jpg;base64,' + base64.b64encode(imgfile.read()) + '">'
         
         
     def _getParentTree(self, person):
@@ -354,7 +359,8 @@ class HtmlWriter(object):
         # if not None then 4-tuple
         imgdata, imgtype, width, height = img
         
-        return imgdata
+        # return unicode string
+        return imgdata.decode('utf-8')
         
 
     def _namestat(self, people):
@@ -384,12 +390,12 @@ class HtmlWriter(object):
 
             tbl += ['<tr>\n']
             
-            tbl += ['<td width="25%">{0}</td>'.format(name1 or '-')]
+            tbl += [u'<td width="25%">{0}</td>'.format(name1 or '-')]
             tbl += ['<td width="20%">{0} ({1:.1%})</td>'.format(count1, count1/total)]
             
             if count2 is not None:
 
-                tbl += ['<td width="25%">{0}</td>'.format(name2 or '-')]
+                tbl += [u'<td width="25%">{0}</td>'.format(name2 or '-')]
                 tbl += ['<td width="20%">{0} ({1:.1%})</td>'.format(count2, count2/total)]
 
             tbl += ['</tr>\n']

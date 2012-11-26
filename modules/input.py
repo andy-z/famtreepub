@@ -98,7 +98,7 @@ class _FSLocator(_FileLocator):
                 if hasattr(self._inputFile, 'read'):
                     self._images = []
                 else:
-                    dir = os.path.dirname(self._xml)
+                    dir = os.path.dirname(self._inputFile)
                     _log.debug("_FSLocator.openImage: recursively scan directory "+dir)
                     self._images = list(os.walk(dir))
             matches = [os.path.join(dir, name) for dir, x, files in self._images if name in files]

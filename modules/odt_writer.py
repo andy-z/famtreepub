@@ -56,10 +56,10 @@ class OdtWriter(object):
     '''
 
 
-    def __init__(self, fileFactory, filename, **kw):
+    def __init__(self, fileFactory, output, **kw):
 
         self.fileFactory = fileFactory
-        self.filename = filename         # output file name
+        self.output = output         # output file name or file object
         
         # page dimensions
         self.page_width = Size(kw.get("page_width", "6in"))
@@ -279,11 +279,11 @@ class OdtWriter(object):
         doc.text.addElement(text.H(text=hdr, outlinelevel=2, stylename=h2style))
         nmales = len([person for person in people if person.sex == 'M'])
         nfemales = len([person for person in people if person.sex == 'F'])
-        p = text.P(text = '%s: %d' % (_('Всего персон'), len(people)))
+        p = text.P(text = '%s: %d' % (_('Person count'), len(people)))
         doc.text.addElement(p)
-        p = text.P(text = '%s: %d' % (_('Женского пола'), nfemales))
+        p = text.P(text = '%s: %d' % (_('Female count'), nfemales))
         doc.text.addElement(p)
-        p = text.P(text = '%s: %d' % (_('Мужского пола'), nmales))
+        p = text.P(text = '%s: %d' % (_('Male count'), nmales))
         doc.text.addElement(p)
 
 
@@ -310,7 +310,10 @@ class OdtWriter(object):
         doc.text.addElement(toc)
 
         # save the result
-        doc.save(self.filename)
+        if hasattr(self.output, 'write'):
+            doc.write(self.output)
+        else:
+            doc.save(self.output)
         
 
     def _getMainImage(self, model, person, doc):
@@ -323,17 +326,18 @@ class OdtWriter(object):
             
             # find image file, get its data
             imgfile = self.fileFactory.openImage(photos[0].file)
-            imgdata = imgfile.read()
-            imgfile = StringIO(imgdata)
-            img = Image.open(imgfile)
-            filename = "Pictures/" + hashlib.sha1(imgdata).hexdigest() + '.' +img.format
-
-            # calculate size of the frame
-            w, h = utils.resize(img.size, (2.5, 2.5))
-            frame = draw.Frame(width="%.3fin"%w, height="%.3fin"%h)
-            imgref = doc.addPicture(filename, "image/"+img.format, imgdata)
-            frame.addElement(draw.Image(href=imgref))
-            return frame
+            if imgfile:
+                imgdata = imgfile.read()
+                imgfile = StringIO(imgdata)
+                img = Image.open(imgfile)
+                filename = "Pictures/" + hashlib.sha1(imgdata).hexdigest() + '.' +img.format
+    
+                # calculate size of the frame
+                w, h = utils.resize(img.size, (2.5, 2.5))
+                frame = draw.Frame(width="%.3fin"%w, height="%.3fin"%h)
+                imgref = doc.addPicture(filename, "image/"+img.format, imgdata)
+                frame.addElement(draw.Image(href=imgref))
+                return frame
         
         
     def _getParentTree(self, person, doc):
