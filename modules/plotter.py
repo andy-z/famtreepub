@@ -63,10 +63,10 @@ class _PersonBox(object):
         else:
             self.box.y0 = y0 + self._margin
             
-    def svg(self):
+    def svg(self, units='in'):
 
         textclass = None if self.name == '?' else 'svglink'
-        elements = self.box.svg(textclass)
+        elements = self.box.svg(textclass, units)
     
         if self.mother:
             x0 = self.box.x1
@@ -76,14 +76,14 @@ class _PersonBox(object):
             y1 = pbox1.box.midy
             midx = (x0 + x1) / 2
             style = _pline_unknown_style if pbox1.name == '?' else _pline_style
-            elements.append(shape.line(X1=str(x0), Y1=str(y0), X2=str(midx), Y2=str(y0), style=_pline_style))
-            elements.append(shape.line(X1=str(midx), Y1=str(y0), X2=str(midx), Y2=str(y1), style=style))
-            elements.append(shape.line(X1=str(midx), Y1=str(y1), X2=str(x1), Y2=str(y1), style=style))
+            elements.append(shape.line(X1=x0^units, Y1=y0^units, X2=midx^units, Y2=y0^units, style=_pline_style))
+            elements.append(shape.line(X1=midx^units, Y1=y0^units, X2=midx^units, Y2=y1^units, style=style))
+            elements.append(shape.line(X1=midx^units, Y1=y1^units, X2=x1^units, Y2=y1^units, style=style))
             pbox2 = self.father
             y1 = pbox2.box.midy
             style = _pline_unknown_style if pbox2.name == '?' else _pline_style
-            elements.append(shape.line(X1=str(midx), Y1=str(y0), X2=str(midx), Y2=str(y1), style=style))
-            elements.append(shape.line(X1=str(midx), Y1=str(y1), X2=str(x1), Y2=str(y1), style=style))
+            elements.append(shape.line(X1=midx^units, Y1=y0^units, X2=midx^units, Y2=y1^units, style=style))
+            elements.append(shape.line(X1=midx^units, Y1=y1^units, X2=x1^units, Y2=y1^units, style=style))
             
         return elements
 
@@ -104,7 +104,7 @@ class Plotter(object):
         self.vmargin = Size("4pt")
         self.vmargin2 = Size("6pt")
     
-    def parent_tree(self, person):
+    def parent_tree(self, person, units):
         """
         Plot parent tree of a person, max_gen gives the max total number of generations plotted.
         
@@ -156,9 +156,9 @@ class Plotter(object):
         width += Size('1pt')
 
         # produce complete XML
-        svg = structure.svg(width=str(width), height=str(height))
+        svg = structure.svg(width=width^units, height=height^units)
         for pbox in _boxes(boxtree):
-            for element in pbox.svg():
+            for element in pbox.svg(units):
                 svg.addElement(element)
 
         # generate full XML

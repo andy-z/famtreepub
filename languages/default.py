@@ -120,11 +120,21 @@
 'You can modify this application and adapt it to your needs': 'You can modify this application and adapt it to your needs',
 'You visited the url %s': 'You visited the url %s',
 
-'welcome_page_title': 'Welcome to family tree publisher',
+'welcome_page_title': 'Welcome to Family Tree Publisher',
 'welcome_page_body': '''\
-To start publisher you need to upload family information. Publisher accepts two types of input data:
-- XML file produced by Agelong Tree (File .. Export ..XML)
-- ZIP file which contains XML file and images (File .. Export ..XML, export photographs, and make ZIP file from a whole directory)
+Family tree publisher is a web application which creates printable or hypertext reports based on family data exported from a 
+popular genealogical application Agelong Tree (http://www.genery.com/). Publisher can accept either XML file produced by 
+File..Export..XML command in Agelong Tree, or ZIP archive containing XML file and images. To produce ZIP file one needs 
+to export data using the same File..Export..XML command and make sure that "Export photos" is enabled, then pack all
+exported files into a single ZIP file. To produce reports with photos one has to create ZIP file, XML files does not include 
+any photos.
+
+Publisher supports two output formats:
+- ''OpenDocument'' which is the format understood by OpenOffice or LibreOffice, this format is better suited for printable output 
+  and can be edited before printing,
+- ''HTML'' which produces single-page document with embedded images, it is obviously better for on-line viewing.
+  
+Start publisher by uploading your family data (ZIP or XML file) and choosing output format:
 ''',
 'options_page_title': 'Options for output format',
 'options_odt_page_body': '''\

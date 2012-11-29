@@ -163,7 +163,8 @@ class HtmlWriter(object):
         doc += ['<html>', '<head>']
         doc += ['<meta http-equiv="Content-Type" content="text/html; charset=utf-8">\n']
         doc += ['<title>', 'Family Tree', '</title>\n']
-        doc += [_style % self.config]
+        d = dict(page_width = self.config.getSize('page_width')^'px')
+        doc += [_style % d]
         doc += ['</head>\n', '<body>\n']
         doc += ['<div id="contents_div"/>\n']
         
@@ -353,7 +354,7 @@ class HtmlWriter(object):
         width = self.config.getSize('page_width')
 
         plotter = Plotter(width=width, gen_dist="12pt", font_size="9pt", fullxml=False, refs=True)
-        img = plotter.parent_tree(person)
+        img = plotter.parent_tree(person, 'px')
         if img is None: return
 
         # if not None then 4-tuple

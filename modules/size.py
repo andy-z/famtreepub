@@ -16,6 +16,9 @@ class Size(object):
     in (inches), cm (centimeters), and mm(millimeters). If units are not specified 
     then inches are assumed.    
     '''
+    
+    dpi = 96.  # some random number for converting pixels to inches
+    
 
     def __init__(self, value = 0):
         '''
@@ -42,6 +45,8 @@ class Size(object):
                 self.value = float(value[:-2])/2.54
             elif value.endswith('mm'):
                 self.value = float(value[:-2])/25.4
+            elif value.endswith('px'):
+                self.value = float(value[:-2])/self.dpi
             else:
                 # without suffix assume it's inches
                 self.value = float(value)
@@ -56,12 +61,17 @@ class Size(object):
         return self.value*72.
 
     @property
+    def px(self):
+        ''' return size in pixels ''' 
+        return int(round(self.value*self.dpi))
+
+    @property
     def inches(self):
         ''' return size in inches ''' 
         return self.value
 
     def __str__(self):
-        ''' Returns string representation, e.g. "12pt" '''
+        ''' Returns string representation, e.g. "12in" '''
         return str(self.value)+'in'
 
     def __cmp__(self, other):
@@ -87,6 +97,21 @@ class Size(object):
     def __rmul__(self, other):
         ''' Multiply size by a factor '''
         return Size(self.value*other)
+
+    def __xor__(self, units):
+        ''' Size(1.)^"mm"  will return "25.4mm" '''
+        if units == 'in':
+            return "%gin" % (int(round(self.value*self.dpi)),)
+        elif units == 'pt':
+            return "%gpt" % (self.value*72.,)
+        elif units == 'cm':
+            return "%gcm" % (self.value*2.54,)
+        elif units == 'mm':
+            return "%gmm" % (self.value*25.4,)
+        elif units == 'px':
+            return "%gpx" % (int(round(self.value*self.dpi)),)
+        else:
+            return "%gin" % (self.value,)
 
 
 if __name__ == "__main__":

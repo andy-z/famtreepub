@@ -89,26 +89,24 @@ class TextBox(object):
         self._height = nlines * self._font_size + (nlines-1) * self._line_spacing +  2 * self._padding
 
     def move(self, x0, y0):
-        ''' Sets new coordinates fo x0 nad y0 '''
+        ''' Sets new coordinates fo x0 and y0 '''
         self._x0 = Size(x0)
         self._y0 = Size(y0)
 
 
-    def svg(self, textclass=None):
+    def svg(self, textclass=None, units='in'):
         ''' Produces list of SVG elements (pysvg obejcts) '''
         
         shapes = []
         
         # render box
-        kw = dict(x=str(self.x0), y=str(self.y0), width=str(self.width), height=str(self.height))
+        kw = dict(x=self.x0^units, y=self.y0^units, width=self.width^units, height=self.height^units)
         if self._rect_style: kw['style'] = self._rect_style
         rect = shape.rect(**kw)
         shapes.append(rect)
         
-            
-        
         # render text
-        kw = dict(text_anchor='middle', font_size=str(self._font_size))
+        kw = dict(text_anchor='middle', font_size=self._font_size^'pt')
         if self._text_style: kw['style'] = self._text_style
         if textclass: kw['class'] = textclass
         txt = text.text(**kw)
@@ -122,18 +120,10 @@ class TextBox(object):
         for i, line in enumerate(self._lines):
             x = self.midx
             y = self.y0 + self._padding + self._font_size*(i+1) + self._line_spacing*i
-            tspan = text.tspan(x=str(x), y=str(y))
+            tspan = text.tspan(x=x^units, y=y^units)
             tspan.appendTextContent(line.encode('utf_8'))
             txt.addElement(tspan)
             
-#            x0 = x - Size('36pt')
-#            x1 = x + Size('36pt')
-#            l = shape.line(X1=str(x0), Y1=str(y), X2=str(x1), Y2=str(y), style='fill:none;stroke-width:0.1pt;stroke:blue')
-#            shapes.append(l)
-#            y1 = y - self._font_size
-#            l = shape.line(X1=str(x0), Y1=str(y1), X2=str(x1), Y2=str(y1), style='fill:none;stroke-width:0.1pt;stroke:red')
-#            shapes.append(l)
-
         return shapes
 
     def _splitText(self, text):

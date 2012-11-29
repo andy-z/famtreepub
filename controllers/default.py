@@ -45,7 +45,7 @@ def _validateFileForm(form):
 
 def index():
     
-    form = SQLFORM(db.input_data)
+    form = SQLFORM(db.input_data, submit_button=T("Upload"))
     if form.process(onvalidation=_validateFileForm).accepted:
         
         input_data = db.input_data(form.vars.id)
