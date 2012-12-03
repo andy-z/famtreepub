@@ -121,7 +121,7 @@ def options_odt():
 
         # send the file
         output.seek(0)
-        response.headers = {'Content-type': 'application/vnd.oasis.opendocument.text'}
+        response.headers['Content-Type'] = 'application/vnd.oasis.opendocument.text'
         output_name = os.path.splitext(input_data.original_name)[0] + '.odt'
         return response.stream(output, 1048576, attachment=True, filename=output_name)
         
@@ -166,7 +166,7 @@ def options_html():
 
         # send the file
         output.seek(0)
-        response.headers = {'Content-type': 'text/html'}
+        response.headers['Content-Type'] = 'text/html'
         output_name = os.path.splitext(input_data.original_name)[0] + '.html'
         return response.stream(output, 1048576, attachment=True, filename=output_name)
         
