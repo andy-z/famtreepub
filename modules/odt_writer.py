@@ -70,6 +70,8 @@ class OdtWriter(object):
         
         # starting page number
         self.firstpage = config.get('first_page')
+        
+        self.config = config
                 
     def write(self, model):
         
@@ -327,7 +329,8 @@ class OdtWriter(object):
                 filename = "Pictures/" + hashlib.sha1(imgdata).hexdigest() + '.' +img.format
     
                 # calculate size of the frame
-                w, h = utils.resize(img.size, (2.5, 2.5))
+                maxsize = (self.config.getSize('image_width').inches, self.config.getSize('image_height').inches)
+                w, h = utils.resize(img.size, maxsize)
                 frame = draw.Frame(width="%.3fin"%w, height="%.3fin"%h)
                 imgref = doc.addPicture(filename, "image/"+img.format, imgdata)
                 frame.addElement(draw.Image(href=imgref))
@@ -342,7 +345,7 @@ class OdtWriter(object):
         width = self.page_width - self.margins[MARGIN_LEFT] - self.margins[MARGIN_RIGHT]
 
         plotter = Plotter(width=width, gen_dist="12pt", font_size="9pt")
-        img = plotter.parent_tree(person)
+        img = plotter.parent_tree(person, 'in')
         if img is None: return
 
         # if not None then 4-tuple

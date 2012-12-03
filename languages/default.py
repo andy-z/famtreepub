@@ -41,6 +41,7 @@
 'Errors': 'Errors',
 'FAQ': 'FAQ',
 'First name': 'First name',
+'First page #': 'First page #',
 'Forms and Validators': 'Forms and Validators',
 'Free Applications': 'Free Applications',
 'Group %(group_id)s created': 'Group %(group_id)s created',
@@ -52,6 +53,8 @@
 'Hello World## comment': 'Hello World',
 'Home': 'Home',
 'How did you get here?': 'How did you get here?',
+'Image size': 'Image size',
+'Input file': 'Input file',
 'Introduction': 'Introduction',
 'Invalid email': 'Invalid email',
 'Is Active': 'Is Active',
@@ -66,6 +69,7 @@
 'Logout': 'Logout',
 'Lost Password': 'Lost Password',
 'Lost password?': 'Lost password?',
+'Margins': 'Margins',
 'Menu Model': 'Menu Model',
 'Modified By': 'Modified By',
 'Modified On': 'Modified On',
@@ -76,9 +80,13 @@
 'Origin': 'Origin',
 'Other Plugins': 'Other Plugins',
 'Other Recipes': 'Other Recipes',
+'Output format': 'Output format',
 'Overview': 'Overview',
+'Page size': 'Page size',
+'Page width': 'Page width',
 'Password': 'Password',
 "Password fields don't match": "Password fields don't match",
+'pixels': 'pixels',
 'please input your password again': 'please input your password again',
 'Plugins': 'Plugins',
 'Powered by': 'Powered by',
@@ -97,6 +105,7 @@
 'Role': 'Role',
 'Semantic': 'Semantic',
 'Services': 'Services',
+'Start': 'Start',
 'Stylesheet': 'Stylesheet',
 'Support': 'Support',
 'The Core': 'The Core',
@@ -105,6 +114,7 @@
 'This App': 'This App',
 'Timestamp': 'Timestamp',
 'Twitter': 'Twitter',
+'Units': 'Units',
 'User %(id)s Logged-in': 'User %(id)s Logged-in',
 'User %(id)s Logged-out': 'User %(id)s Logged-out',
 'User %(id)s Registered': 'User %(id)s Registered',
@@ -120,6 +130,7 @@
 'You can modify this application and adapt it to your needs': 'You can modify this application and adapt it to your needs',
 'You visited the url %s': 'You visited the url %s',
 
+# Index page
 'welcome_page_title': 'Welcome to Family Tree Publisher',
 'welcome_page_body': '''\
 Family tree publisher is a web application which creates printable or hypertext reports based on family data exported from a 
@@ -136,12 +147,31 @@ Publisher supports two output formats:
   
 Start publisher by uploading your family data (ZIP or XML file) and choosing output format:
 ''',
+'file_validation_failed': 'Unknown file format, check file and try again.',
+'welcome_page_footer': '''
+Please send me your questions or suggestions using ''Mail'' link at the top of the page. 
+''',
+
+
+# options page
 'options_page_title': 'Options for output format',
 'options_odt_page_body': '''\
-Please review and update options which control the output.
+On this page you can change various options controlling the appearance of the produced document. There are options which 
+define size of the printed pages, margins, size of the images, and page numbering. By default all sizes are specified in 
+inches but you can select your own units (such as centimeters, millimeters, or points).
+
+Note that Table of Contents in produced ODT file will need an update inside LibreOffice or OpenOffice to display all 
+entries and page numbers. When you open file in LibreOffice for example, locate and run "Update Indexes and Tables" command
+in the menus which should update Table of Contents (located at the end of file).
+
+Check/modify the options and click Start, download window for produced file will open when the file is ready. For large trees 
+it may take some time to produce result, do not lose your patience.
 ''',
 'options_html_page_body': '''\
-Please review and update options which control the output.
+On this page you can change various options controlling the appearance of the produced HTML page. There are options which 
+define width of the page and size of the images. All sizes are specified in pixels.
+
+Check/modify the options and click Start, download window for produced file will open when the file is ready. For large trees 
+it may take some time to produce result, do not lose your patience.
 ''',
-'file_validation_failed': 'Unknown file format, check file and try again.'
 }

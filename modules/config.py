@@ -18,8 +18,9 @@ class Config(dict):
     def __init__(self):
         
         # set defaults
-        self['page_width'] = 8.5
-        self['page_height'] = 11
+        self['page_width'] = 6.
+        self['page_height'] = 9.
+        self['html_page_width'] = 800
         
         self['margin_left'] = 0.5
         self['margin_right'] = 0.5

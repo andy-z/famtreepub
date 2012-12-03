@@ -49,6 +49,15 @@ class Doc(object):
         return map(_id2pers.get, self._people)
     
 
+def _parseOne(str):
+    i = str.find('(')
+    if i < 0:
+        d = int(str)
+        return d, d
+    else:
+        if str.endswith(')'):
+            return int(str[:i]), int(str[i+1:-1])
+    return None, None
 
 class Date(object):
     
@@ -57,11 +66,23 @@ class Date(object):
         if datestr:
             dd = datestr.split('.')
             if len(dd) == 1:
-                self.date = (int(dd[0]), )
+                # year only
+                years = _parseOne(dd[0])
+                self.date = (years[0],)
+                self.old_date = (years[1],)
             elif len(dd) == 2:
-                self.date = (int(dd[1]), int(dd[0]))
+                # year and month
+                years = _parseOne(dd[1])
+                months = _parseOne(dd[0])
+                self.date = (years[0], months[0])
+                self.old_date = (years[1], months[1])
             elif len(dd) == 3:
-                self.date = (int(dd[2]), int(dd[1]), int(dd[0]))
+                # year, month, day
+                years = _parseOne(dd[2])
+                months = _parseOne(dd[1])
+                days = _parseOne(dd[0])
+                self.date = (years[0], months[0], days[0])
+                self.old_date = (years[1], months[1], days[1])
 
     def __cmp__(self, other):
         return cmp(self.date, other.date)
@@ -70,11 +91,18 @@ class Date(object):
         return self.date is not None
 
     def __str__(self):
-        res = ""
-        if len(self.date) > 0: res = "%04d" % self.date[0]
-        if len(self.date) > 1: res = "%02d.%s" % (self.date[1], res)
-        if len(self.date) > 2: res = "%02d.%s" % (self.date[2], res)
+        def fmt(date):
+            res = ""
+            if len(date) > 0: res = "%04d" % date[0]
+            if len(date) > 1: res = "%02d.%s" % (date[1], res)
+            if len(date) > 2: res = "%02d.%s" % (date[2], res)
+            return res
+        
+        res = fmt(self.date)
+        if self.old_date != self.date: 
+            res += " ({0} JC)".format(fmt(self.old_date))
         return res
+        
 
 class Event(object):
 

@@ -101,7 +101,7 @@ class Size(object):
     def __xor__(self, units):
         ''' Size(1.)^"mm"  will return "25.4mm" '''
         if units == 'in':
-            return "%gin" % (int(round(self.value*self.dpi)),)
+            return "%gin" % (self.value,)
         elif units == 'pt':
             return "%gpt" % (self.value*72.,)
         elif units == 'cm':

@@ -40,27 +40,27 @@ response.generic_patterns = ['*'] if request.is_local else []
 #########################################################################
 
 from gluon.tools import Auth, Crud, Service, PluginManager, prettydate
-auth = Auth(db)
+#auth = Auth(db)
 crud, service, plugins = Crud(db), Service(), PluginManager()
 
 ## create all tables needed by auth if not custom tables
-auth.define_tables(username=False, signature=False)
+#auth.define_tables(username=False, signature=False)
 
 ## configure email
-mail = auth.settings.mailer
-mail.settings.server = 'logging' or 'smtp.gmail.com:587'
-mail.settings.sender = 'you@gmail.com'
-mail.settings.login = 'username:password'
+#mail = auth.settings.mailer
+#mail.settings.server = 'logging' or 'smtp.gmail.com:587'
+#mail.settings.sender = 'you@gmail.com'
+#mail.settings.login = 'username:password'
 
 ## configure auth policy
-auth.settings.registration_requires_verification = False
-auth.settings.registration_requires_approval = False
-auth.settings.reset_password_requires_verification = True
+#auth.settings.registration_requires_verification = False
+#auth.settings.registration_requires_approval = False
+#auth.settings.reset_password_requires_verification = True
 
 ## if you need to use OpenID, Facebook, MySpace, Twitter, Linkedin, etc.
 ## register with janrain.com, write your domain:api_key in private/janrain.key
-from gluon.contrib.login_methods.rpx_account import use_janrain
-use_janrain(auth, filename='private/janrain.key')
+#from gluon.contrib.login_methods.rpx_account import use_janrain
+#use_janrain(auth, filename='private/janrain.key')
 
 #########################################################################
 ## Define your tables below (or better in another model file) for example
@@ -82,13 +82,13 @@ use_janrain(auth, filename='private/janrain.key')
 ## after defining tables, uncomment below to enable auditing
 # auth.enable_record_versioning(db)
 
-mail.settings.server = settings.email_server
-mail.settings.sender = settings.email_sender
-mail.settings.login = settings.email_login
+#mail.settings.server = settings.email_server
+#mail.settings.sender = settings.email_sender
+#mail.settings.login = settings.email_login
 
 db.define_table('input_data',
-                Field('input_file', 'upload', autodelete=True, requires=IS_NOT_EMPTY()),
-                Field('output_type', default="OpenDocument", requires=IS_IN_SET(['OpenDocument', 'HTML'])),
+                Field('input_file', 'upload', autodelete=True, requires=IS_NOT_EMPTY(), label=T('Input file')),
+                Field('output_type', default="OpenDocument", requires=IS_IN_SET(['OpenDocument', 'HTML']), label=T('Output format')),
                 Field('original_name', writable=False, readable=False),
                 Field('created', 'datetime', writable=False, readable=False),
                 )

@@ -317,7 +317,7 @@ class HtmlWriter(object):
             out.close()
 
 
-    def _getMainImage(self, model, person, maxsize = (300, 300)):
+    def _getMainImage(self, model, person):
         '''
         Returns image for a person, return value is an <img> element
         '''
@@ -333,6 +333,7 @@ class HtmlWriter(object):
                 img = Image.open(imgfile)
                 
                 # resize it if larger than needed
+                maxsize = (self.config.getSize('image_width').px, self.config.getSize('image_height').px)
                 size = utils.resize(img.size, maxsize)
                 if size != img.size:
                     _log.debug('Resize image to %s', size)

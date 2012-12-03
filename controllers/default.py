@@ -69,19 +69,28 @@ def options_odt():
     input_data = db.input_data(session.input_data_id)
     
     options = []
-    options += [('Units: ', SELECT('in', 'cm', 'mm', 'pt', _name='units', value=_optval('units', 'in'), _style='width: 80px'))]
-    options += [('Page width: ', INPUT(_type='number', _name='page_width', _style='width: 40px', _value=_optval('page_width', '8.5')))]
-    options += [('Page height: ', INPUT(_type='number', _name='page_height', _style='width: 40px', _value=_optval('page_height', '11')))]
-    options += [('Margins: ', 
-                 TABLE(TR(INPUT(_type='number', _name='margin_left', _style='width: 30px', _value=_optval('margin_left', '0.5')),
-                          DIV(INPUT(_type='number', _name='margin_top', _style='width: 30px', _value=_optval('margin_top', '0.5')),
+    options += [(T('Units') + ': ', SELECT('in', 'cm', 'mm', 'pt', _name='units', value=_optval('units', 'in'), _style='width: 80px'))]
+    options += [(T('Page size') + ': ', 
+                 INPUT(_type='text', _name='page_width', _style='width: 40px', _value=_optval('page_width', '6')) +
+                 ' x ' +
+                 INPUT(_type='text', _name='page_height', _style='width: 40px', _value=_optval('page_height', '9'))
+                 )]
+    options += [(T('Margins') + ': ', 
+                 TABLE(TR(INPUT(_type='text', _name='margin_left', _style='width: 30px', _value=_optval('margin_left', '0.5')),
+                          DIV(INPUT(_type='text', _name='margin_top', _style='width: 30px', _value=_optval('margin_top', '0.5')),
                               BR(),
-                              INPUT(_type='number', _name='margin_bottom', _style='width: 30px', _value=_optval('margin_bottom', '0.5'))
+                              INPUT(_type='text', _name='margin_bottom', _style='width: 30px', _value=_optval('margin_bottom', '0.25'))
                               ),
-                          INPUT(_type='number', _name='margin_right', _style='width: 30px', _value=_optval('margin_right', '0.5')),
-                          )))]
-    options += [('First page: ', INPUT(_type='number', _name='first_page', _style='width: 40px', _value=_optval('first_page', '1')))]
-    options += [(INPUT(_value='Start', _type='submit'), )]
+                          INPUT(_type='text', _name='margin_right', _style='width: 30px', _value=_optval('margin_right', '0.5')),
+                          ))
+                 )]
+    options += [(T('Image size') + ': ', 
+                 INPUT(_type='text', _name='image_width', _style='width: 40px', _value=_optval('image_width', '2.5')) +
+                 ' x ' +
+                 INPUT(_type='text', _name='image_height', _style='width: 40px', _value=_optval('image_height', '2.5'))
+                 )]
+    options += [(T('First page #') + ': ', INPUT(_type='number', _name='first_page', _style='width: 50px', _value=_optval('first_page', '1')))]
+    options += [('', INPUT(_value=T('Start'), _type='submit'), )]
     
     form = FORM(TABLE(*[TR(*opt) for opt in options]))
     
@@ -98,6 +107,8 @@ def options_odt():
         config['margin_top'] = form.vars.margin_top+form.vars.units
         config['margin_bottom'] = form.vars.margin_bottom+form.vars.units
         config['margin_right'] = form.vars.margin_right+form.vars.units
+        config['image_width'] = form.vars.image_width+form.vars.units
+        config['image_height'] = form.vars.image_height+form.vars.units
         config['first_page'] = int(form.vars.first_page)
 
         # convert it
@@ -124,9 +135,14 @@ def options_html():
     input_data = db.input_data(session.input_data_id)
     
     options = []
-    options += [('Units: ', SELECT('in', 'cm', 'mm', 'pt', _name='units', value=_optval('units', 'in'), _style='width: 80px'))]
-    options += [('Page width: ', INPUT(_type='number', _name='page_width', _style='width: 40px', _value=_optval('page_width', '8.5')))]
-    options += [(INPUT(_value='Start', _type='submit'), )]
+    options += [(T('Page width')+': ', INPUT(_type='number', _name='html_page_width', _style='width: 50px', _value=_optval('html_page_width', '800')) + 
+                 ' ' + T('pixels'))]
+    options += [(T('Image size') +': ', 
+                 INPUT(_type='number', _name='html_image_width', _style='width: 50px', _value=_optval('html_image_width', '300')) +
+                 ' x ' +
+                 INPUT(_type='number', _name='html_image_height', _style='width: 50px', _value=_optval('html_image_height', '300')) +
+                 ' ' + T('pixels'))]
+    options += [('', INPUT(_value=T('Start'), _type='submit'))]
     
     form = FORM(TABLE(*[TR(*opt) for opt in options]))
     
@@ -137,7 +153,9 @@ def options_html():
         
         # all config options
         config = Config()
-        config['page_width'] = form.vars.page_width+form.vars.units
+        config['page_width'] = form.vars.html_page_width+'px'
+        config['image_width'] = form.vars.html_image_width+'px'
+        config['image_height'] = form.vars.html_image_height+'px'
 
         # convert it
         floc = FileLocator(os.path.join(request.folder, 'uploads', input_data.input_file))
