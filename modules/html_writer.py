@@ -6,7 +6,7 @@ Created on Sep 8, 2012
 '''
 
 import os
-import Image
+from PIL import Image
 import hashlib
 import logging
 from cStringIO import StringIO
