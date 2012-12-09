@@ -62,7 +62,10 @@ def index():
             redirect(URL(options_odt))
         else:
             redirect(URL(options_html))
-        
+    else:
+        # remove file from the form, otherwise it is sent bach withthe full file contents
+        if 'input_file' in form.vars: del form.vars.input_file
+         
     return dict(form=form)
 
 

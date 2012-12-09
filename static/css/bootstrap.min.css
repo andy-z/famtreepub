@@ -4338,7 +4338,7 @@ button.btn.btn-mini,input[type="submit"].btn.btn-mini {
 }
 
 .navbar-inverse .btn-navbar:active,.navbar-inverse .btn-navbar.active {
-	background-color: #000 \9
+	background-color: #000
 }
 
 .breadcrumb {
@@ -4975,56 +4975,31 @@ a.label:hover,a.badge:hover {
 	top: 0
 }
 
-@
--webkit-keyframes progress-bar-stripes {
-	from {background-position: 40px 0
+@-webkit-keyframes progress-bar-stripes {
+	from {background-position: 40px 0}
+	to {background-position: 0 0}
 }
 
-to {
-	background-position: 0 0
+@-moz-keyframes progress-bar-stripes {
+	from {background-position: 40px 0}
+	to {background-position: 0 0}
 }
 
-}
-@
--moz-keyframes progress-bar-stripes {
-	from {background-position: 40px 0
-}
-
-to {
-	background-position: 0 0
+@-ms-keyframes progress-bar-stripes {
+	from {background-position: 40px 0}
+	to {background-position: 0 0}
 }
 
-}
-@
--ms-keyframes progress-bar-stripes {
-	from {background-position: 40px 0
-}
-
-to {
-	background-position: 0 0
+@-o-keyframes progress-bar-stripes {
+	from {background-position: 0 0}
+	to {background-position: 40px 0}
 }
 
-}
-@
--o-keyframes progress-bar-stripes {
-	from {background-position: 0 0
-}
-
-to {
-	background-position: 40px 0
+@keyframes progress-bar-stripes {
+	from {background-position: 40px 0}
+	to {background-position: 0 0}
 }
 
-}
-@
-keyframes progress-bar-stripes {
-	from {background-position: 40px 0
-}
-
-to {
-	background-position: 0 0
-}
-
-}
 .progress {
 	height: 20px;
 	margin-bottom: 20px;

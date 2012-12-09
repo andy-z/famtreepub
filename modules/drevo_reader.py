@@ -37,7 +37,10 @@ class DrevoReader(object):
         xml = fileFactory.openXML()
         
         # read and parse whole tree
-        tree = ET.parse(xml)
+        try:
+            tree = ET.parse(xml)
+        except:
+            raise ValueError("Not well-formed XML file")
         root = tree.getroot()
 
         # first step is to guess date formats, collect all dates and 
