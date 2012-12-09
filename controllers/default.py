@@ -10,6 +10,7 @@ import logging
 import datetime
 from StringIO import StringIO
 import tempfile
+import traceback
 
 from config import Config 
 from drevo_reader import DrevoReader 
@@ -17,6 +18,8 @@ from input import FileLocator
 import validator
 from odt_writer import OdtWriter
 from html_writer import HtmlWriter
+
+_log = logging.getLogger(__name__)
 
 
 def _optval(name, defval):
@@ -35,13 +38,15 @@ def _validateFileForm(form):
     # at this point form data are not on disk yet, and form contains complete
     # file data, not a file name.
 
-    if not validator.validate(form.vars.input_file.file):
-        # if validation fails then display an error
-        form.errors.input_file = T('file_validation_failed')
-    else:
-        # otherwise set hidden fields
+    try:
+        validator.validate(form.vars.input_file.file)
+        # oon success set hidden fields
         form.vars.original_name = request.vars.input_file.filename
         form.vars.created = datetime.datetime.now()
+    except Exception, ex:
+        # if validation fails then display an error
+        form.errors.input_file = T('file_validation_failed') + ': ' + str(ex)
+        _log.error("%s", traceback.format_exc())
 
 def index():
     
@@ -90,6 +95,11 @@ def options_odt():
                  INPUT(_type='text', _name='image_height', _style='width: 40px', _value=_optval('image_height', '2.5'))
                  )]
     options += [(T('First page #') + ': ', INPUT(_type='number', _name='first_page', _style='width: 50px', _value=_optval('first_page', '1')))]
+    fmtoptions = [OPTION(T('31.12.2001'), _value='DMY.'),
+                  OPTION(T('31/12/2001'), _value='DMY/'),
+                  OPTION(T('2001-12-31'), _value='YMD-'),
+                  OPTION(T('12/31/2012'), _value='MDY/')]
+    options += [(T('Date format') + ': ', SELECT(*fmtoptions, _name='datefmt', value=_optval('datefmt', 'DMY.'), _style='width: 150px'))]
     options += [('', INPUT(_value=T('Start'), _type='submit'), )]
     
     form = FORM(TABLE(*[TR(*opt) for opt in options]))
@@ -110,6 +120,7 @@ def options_odt():
         config['image_width'] = form.vars.image_width+form.vars.units
         config['image_height'] = form.vars.image_height+form.vars.units
         config['first_page'] = int(form.vars.first_page)
+        config['date_format'] = form.vars.datefmt
 
         # convert it
         floc = FileLocator(os.path.join(request.folder, 'uploads', input_data.input_file))
@@ -142,6 +153,13 @@ def options_html():
                  ' x ' +
                  INPUT(_type='number', _name='html_image_height', _style='width: 50px', _value=_optval('html_image_height', '300')) +
                  ' ' + T('pixels'))]
+    
+    fmtoptions = [OPTION(T('31.12.2001'), _value='DMY.'),
+                  OPTION(T('31/12/2001'), _value='DMY/'),
+                  OPTION(T('2001-12-31'), _value='YMD-'),
+                  OPTION(T('12/31/2012'), _value='MDY/')]
+    options += [(T('Date format') + ': ', SELECT(*fmtoptions, _name='datefmt', value=_optval('datefmt', 'DMY.'), _style='width: 150px'))]
+    
     options += [('', INPUT(_value=T('Start'), _type='submit'))]
     
     form = FORM(TABLE(*[TR(*opt) for opt in options]))
@@ -156,6 +174,7 @@ def options_html():
         config['page_width'] = form.vars.html_page_width+'px'
         config['image_width'] = form.vars.html_image_width+'px'
         config['image_height'] = form.vars.html_image_height+'px'
+        config['date_format'] = form.vars.datefmt
 
         # convert it
         floc = FileLocator(os.path.join(request.folder, 'uploads', input_data.input_file))

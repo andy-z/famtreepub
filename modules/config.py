@@ -32,6 +32,8 @@ class Config(dict):
         
         self['first_page'] = 1
 
+        self['date_format'] = 'DMY.'
+
     def getSize(self, name, default=None):
         
         s = self.get(name, default)

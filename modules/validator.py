@@ -9,7 +9,7 @@ import logging
 from drevo_reader import DrevoReader 
 from input import FileLocator
 
-logger = logging.getLogger("web2py.app.famtreepub")
+logger = logging.getLogger(__name__)
 
 def validate(arg):
     '''
@@ -25,9 +25,4 @@ def validate(arg):
         logger.debug('File %s does not exist', arg)
         return False
     
-    try:
-        reader = DrevoReader(floc)
-    except Exception, ex:
-        logger.debug('Error parsing input file: %s', str(ex))
-        return False
-    return True
+    reader = DrevoReader(floc)

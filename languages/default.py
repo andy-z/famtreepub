@@ -147,7 +147,7 @@ Publisher supports two output formats:
   
 Start publisher by uploading your family data (ZIP or XML file) and choosing output format:
 ''',
-'file_validation_failed': 'Unknown file format, check file and try again.',
+'file_validation_failed': 'Error in file',
 'welcome_page_footer': '''
 Please send me your questions or suggestions using ''Mail'' link at the top of the page. 
 ''',

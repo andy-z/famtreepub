@@ -190,7 +190,7 @@ class HtmlWriter(object):
             # birth date and place
             doc += ['<p>' + _('Born', person) + ": "]
             if person.birth.date: 
-                doc += [str(person.birth.date)]
+                doc += [self._datefmt(person.birth.date)]
             else:
                 doc += [_('Unknown', person)]
             if person.birth.place: 
@@ -246,7 +246,7 @@ class HtmlWriter(object):
             if events:
                 doc += ['<h3>' + _("Events and dates") + '</h3>\n']
             for evt in events:
-                doc += ['<p>' + str(evt[0]) + ": " + evt[1] + '</p>\n']
+                doc += ['<p>' + self._datefmt(evt[0]) + ": " + evt[1] + '</p>\n']
 
             # Comments are published as set of paragraphs
             if person.comment:
@@ -404,3 +404,9 @@ class HtmlWriter(object):
 
         tbl += ['</table>\n']
         return tbl
+
+
+    def _datefmt(self, date):
+        
+        fmt = self.config['date_format']
+        return date.fmt(fmt[:3], fmt[-1])

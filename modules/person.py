@@ -6,6 +6,8 @@ Created on Sep 6, 2012
 
 import logging
 
+import date
+
 _log = logging.getLogger(__name__)
 
 def _tagtext(elem, tag):
@@ -35,7 +37,7 @@ class Name(object):
 
 class Doc(object):
 
-    def __init__(self, elem):
+    def __init__(self, elem, dateParser):
         self.id = elem.get('id')
         self.docclass = elem.get('class')
         self.default = (elem.get('default') == 'T')
@@ -48,66 +50,10 @@ class Doc(object):
     def people(self):
         return map(_id2pers.get, self._people)
     
-
-def _parseOne(str):
-    i = str.find('(')
-    if i < 0:
-        d = int(str)
-        return d, d
-    else:
-        if str.endswith(')'):
-            return int(str[:i]), int(str[i+1:-1])
-    return None, None
-
-class Date(object):
-    
-    def __init__(self, datestr):
-        self.date = None
-        if datestr:
-            dd = datestr.split('.')
-            if len(dd) == 1:
-                # year only
-                years = _parseOne(dd[0])
-                self.date = (years[0],)
-                self.old_date = (years[1],)
-            elif len(dd) == 2:
-                # year and month
-                years = _parseOne(dd[1])
-                months = _parseOne(dd[0])
-                self.date = (years[0], months[0])
-                self.old_date = (years[1], months[1])
-            elif len(dd) == 3:
-                # year, month, day
-                years = _parseOne(dd[2])
-                months = _parseOne(dd[1])
-                days = _parseOne(dd[0])
-                self.date = (years[0], months[0], days[0])
-                self.old_date = (years[1], months[1], days[1])
-
-    def __cmp__(self, other):
-        return cmp(self.date, other.date)
-
-    def __nonzero__(self):
-        return self.date is not None
-
-    def __str__(self):
-        def fmt(date):
-            res = ""
-            if len(date) > 0: res = "%04d" % date[0]
-            if len(date) > 1: res = "%02d.%s" % (date[1], res)
-            if len(date) > 2: res = "%02d.%s" % (date[2], res)
-            return res
-        
-        res = fmt(self.date)
-        if self.old_date != self.date: 
-            res += " ({0} JC)".format(fmt(self.old_date))
-        return res
-        
-
 class Event(object):
 
     def __init__(self, date, place):
-        self.date = Date(date)
+        self.date = date
         self.place = place
         
     def __cmp__(self, other):
@@ -116,9 +62,9 @@ class Event(object):
 
 class Spouse(object):
     
-    def __init__(self, elem):
+    def __init__(self, elem, dateParser):
         self.id = elem.get('id')
-        self.marriage = Event(_tagtext(elem, 'marriage/date'), _tagtext(elem, "marriage/pl_full"))
+        self.marriage = Event(dateParser(_tagtext(elem, 'marriage/date')), _tagtext(elem, "marriage/pl_full"))
         self._children = [el.get('id') for el in elem.findall('child')]
         self.divorced = elem.find('divorce') is not None
 
@@ -138,7 +84,7 @@ class Person(object):
     '''
     Person description
     '''
-    def __init__(self, elem):
+    def __init__(self, elem, dateParser):
         '''
         Constructor
         '''
@@ -146,13 +92,13 @@ class Person(object):
         self.id = elem.get('id')
         self.name = Name(elem)
         self.sex = _tagtext(elem, 'sex')
-        self.birth = Event(_tagtext(elem, 'bfdate'), _tagtext(elem, 'bplace'))
-        self.death = Event(_tagtext(elem, 'dfdate'), _tagtext(elem, 'dplace'))
+        self.birth = Event(dateParser(_tagtext(elem, 'bfdate')), _tagtext(elem, 'bplace'))
+        self.death = Event(dateParser(_tagtext(elem, 'dfdate')), _tagtext(elem, 'dplace'))
         self._mother = _tagid(elem, 'mother')
         self._father = _tagid(elem, 'father')
         self.occupation = _tagtext(elem, 'occu')
         self.comment = _tagtext(elem, 'comment')
-        self.spouses = [Spouse(el) for el in elem.findall('spouse')]
+        self.spouses = [Spouse(el, dateParser) for el in elem.findall('spouse')]
 
         # add this person to global id map
         global _id2pers
