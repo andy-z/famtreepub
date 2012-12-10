@@ -15,12 +15,11 @@ _log = logging.getLogger(__name__)
 
 class _DateParser(object):
     '''Class defines callable instances to parse dates'''
-    def __init__(self, fmt, sep):
+    def __init__(self, fmt):
         self.fmt = fmt
-        self.sep = sep
         
     def __call__(self, datestr):
-        return date.parse(datestr, self.fmt, self.sep)
+        return date.parse(datestr, self.fmt)
 
 class DrevoReader(object):
     '''
@@ -46,9 +45,8 @@ class DrevoReader(object):
         # first step is to guess date formats, collect all dates and 
         # feed them to the date parser, it will raise exception if 
         # cannot reliably determine date format 
-        datesep = date.separator(self._getDates(root))
         datefmt = date.guessFormat(self._getDates(root))
-        dateParser = _DateParser(datefmt, datesep)
+        dateParser = _DateParser(datefmt)
 
         self.docs = []
         self.people = []
