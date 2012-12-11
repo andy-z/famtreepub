@@ -80,7 +80,7 @@ class _FSLocator(_FileLocator):
     def openImage(self, name):
         '''Returns file object for the named image file.''' 
      
-        _log.debug("_FSLocator.openImage: find image "+name)
+        _log.debug("_FSLocator.openImage: find image %s", name)
 
         if self._imgdir:
             if self._images is None:
@@ -142,7 +142,7 @@ class _ZipLocator(_FileLocator):
     def openImage(self, name):
         '''Returns file object for the named image file.''' 
      
-        _log.debug("_FSLocator.openImage: find image "+name)
+        _log.debug("_FSLocator.openImage: find image %s", name)
 
         paths = [f for f in self._toc if os.path.basename(f) == name]
         if not paths: return None

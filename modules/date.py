@@ -34,10 +34,10 @@ _ymd_index = dict(YMD=(0,1,2), DMY=(2,1,0), MDY=(2,0,1),
 _date_re_ymd = re.compile(r'''\b
         (?P<year>\d{4})                       # 4 digits
         (?:\((?P<year_jc>\d{2,4})\))?         # optional 4 digits in parens fo JC
-        ([.-/])                           # separator character
+        ([-./])                           # separator character
         (?P<mon>\d{2})                    # 2 digits
         (?:\((?P<mon_jc>\d{2})\))?        # optional 2 digits in parens fo JC
-        ([.-/])                       # separator character
+        \3                                # separator character
         (?P<day>\d{2})                # 2 digits
         (?:\((?P<day_jc>\d{2})\))?    # optional 2 digits in parens fo JC
 \b
@@ -46,10 +46,10 @@ _date_re_ymd = re.compile(r'''\b
 _date_re_dmy = re.compile(r'''\b
         (?P<day>\d{2})                # 2 digits
         (?:\((?P<day_jc>\d{2})\))?    # optional 2 digits in parens fo JC
-        ([.-/])                       # separator character
+        ([-./])                       # separator character
         (?P<mon>\d{2})                    # 2 digits
         (?:\((?P<mon_jc>\d{2})\))?        # optional 2 digits in parens fo JC
-        ([.-/])                           # separator character
+        \3                                # separator character
         (?P<year>\d{4})                       # 4 digits
         (?:\((?P<year_jc>\d{2,4})\))?         # optional 4 digits in parens fo JC
 \b
@@ -58,7 +58,7 @@ _date_re_dmy = re.compile(r'''\b
 _date_re_my = re.compile(r'''\b
         (?P<mon>\d{2})                    # 2 digits
         (?:\((?P<mon_jc>\d{2})\))?        # optional 2 digits in parens fo JC
-        ([.-/])                           # separator character
+        ([-./])                           # separator character
         (?P<year>\d{4})                       # 4 digits
         (?:\((?P<year_jc>\d{2,4})\))?         # optional 4 digits in parens fo JC
 \b
@@ -67,7 +67,7 @@ _date_re_my = re.compile(r'''\b
 _date_re_ym = re.compile(r'''\b
         (?P<year>\d{4})                       # 4 digits
         (?:\((?P<year_jc>\d{2,4})\))?         # optional 4 digits in parens fo JC
-        ([.-/])                           # separator character
+        ([-./])                           # separator character
         (?P<mon>\d{2})                    # 2 digits
         (?:\((?P<mon_jc>\d{2})\))?        # optional 2 digits in parens fo JC
 \b
@@ -216,6 +216,8 @@ def parse(datestr, fmt):
         if not match: match = _date_re_y.search(fstr)
         if not match: break
         
+        
+        _log.debug('date.parse: match=%s', match.group(0))
         gd = match.groupdict(0)
 
         y, m, d, yjc, mjc, djc = [int(gd.get(k, 0)) for k in ('year', 'mon', 'day', 'year_jc', 'mon_jc', 'day_jc')]
