@@ -12,7 +12,7 @@ def main():
 
     parser = OptionParser(usage = "usage: %prog [options] file.xml")
     
-    (options, args) = parser.parse_args()
+    options, args = parser.parse_args()
     if len(args) != 1:
         parser.error('One positional argument is required')
 

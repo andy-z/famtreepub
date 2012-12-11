@@ -5,15 +5,12 @@ Created on Sep 8, 2012
 @author: salnikov
 '''
 
-import os
 from PIL import Image
-import hashlib
 import logging
 from cStringIO import StringIO
 import base64
 
 from plotter import Plotter
-from size import Size
 import gtext
 import utils
 

@@ -5,7 +5,6 @@ Created on Sep 8, 2012
 @author: salnikov
 '''
 
-import os
 from PIL import Image
 import hashlib
 import logging
@@ -373,7 +372,7 @@ class OdtWriter(object):
         
         namefreq = {}
         for person in people:
-            counter = namefreq.setdefault(person.name.first, 0)
+            namefreq.setdefault(person.name.first, 0)
             namefreq[person.name.first] += 1
         namefreq = [(key, val) for key, val in namefreq.items()]
         # sort accending in name

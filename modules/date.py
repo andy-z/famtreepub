@@ -9,7 +9,6 @@ Module for date-related utilities.
 import re
 import datetime
 import logging
-import traceback
 
 _log = logging.getLogger(__name__)
 
@@ -32,61 +31,54 @@ _ymd_index = dict(YMD=(0,1,2), DMY=(2,1,0), MDY=(2,0,1),
                   YbD=(0,1,2), YBD=(0,1,2), DbY=(2,1,0), DBY=(2,1,0))
 
 
-# re for date string in DMY or MDY format
-_date_re_dmy = re.compile(r'''(?:\s|^)        # beginning of the string or whitespace
-    (?P<whole>
-        (?:
-            (?:
-                (?P<day>\d{2})                # 2 digits
-                (?:\((?P<day_jc>\d{2})\))?    # optional 2 digits in parens fo JC
-                ([.-/])                       # separator character
-            )?
-            (?P<mon>\d{2})                    # 2 digits
-            (?:\((?P<mon_jc>\d{2})\))?        # optional 2 digits in parens fo JC
-            ([.-/])                           # separator character
-        )?
+_date_re_ymd = re.compile(r'''\b
         (?P<year>\d{4})                       # 4 digits
         (?:\((?P<year_jc>\d{2,4})\))?         # optional 4 digits in parens fo JC
-    )
-    (?:\s|$)
-    ''', re.X)
+        ([.-/])                           # separator character
+        (?P<mon>\d{2})                    # 2 digits
+        (?:\((?P<mon_jc>\d{2})\))?        # optional 2 digits in parens fo JC
+        ([.-/])                       # separator character
+        (?P<day>\d{2})                # 2 digits
+        (?:\((?P<day_jc>\d{2})\))?    # optional 2 digits in parens fo JC
+\b
+''', re.X)
 
-_date_re_mdy = re.compile(r'''(?:\s|^)        # beginning of the string or whitespace
-    (?P<whole>
-        (?:
-            (?P<mon>\d{2})                    # 2 digits
-            (?:\((?P<mon_jc>\d{2})\))?        # optional 2 digits in parens fo JC
-            ([.-/])                           # separator character
-            (?:
-                (?P<day>\d{2})                # 2 digits
-                (?:\((?P<day_jc>\d{2})\))?    # optional 2 digits in parens fo JC
-                ([.-/])                       # separator character
-            )?
-        )?
+_date_re_dmy = re.compile(r'''\b
+        (?P<day>\d{2})                # 2 digits
+        (?:\((?P<day_jc>\d{2})\))?    # optional 2 digits in parens fo JC
+        ([.-/])                       # separator character
+        (?P<mon>\d{2})                    # 2 digits
+        (?:\((?P<mon_jc>\d{2})\))?        # optional 2 digits in parens fo JC
+        ([.-/])                           # separator character
         (?P<year>\d{4})                       # 4 digits
         (?:\((?P<year_jc>\d{2,4})\))?         # optional 4 digits in parens fo JC
-    )
-    (?:\s|$)
-    ''', re.X)
+\b
+''', re.X)
 
-# re for date string in YMD format
-_date_re_ymd = re.compile(r'''(?:\s|^)        # beginning of the string or whitespace
+_date_re_my = re.compile(r'''\b
+        (?P<mon>\d{2})                    # 2 digits
+        (?:\((?P<mon_jc>\d{2})\))?        # optional 2 digits in parens fo JC
+        ([.-/])                           # separator character
         (?P<year>\d{4})                       # 4 digits
-        (?:\((?P<year_jc>\d{4})\))?           # optional 24 digits in parens fo JC
-        (?:
-            ([.-/])                           # separator character
-            (?P<mon>\d{2})                    # 2 digits
-            (?:\((?P<mon_jc>\d{2})\))?          # optional 2 digits in parens fo JC
-            (?:
-                ([.-/])                       # separator character
-                (?P<day>\d{2})                # 2 digits
-                (?:\((?P<day_jc>\d{2})\))?    # optional 2 digits in parens fo JC
-            )?
-        )?
-        \b
-        ''', re.X)
+        (?:\((?P<year_jc>\d{2,4})\))?         # optional 4 digits in parens fo JC
+\b
+''', re.X)
 
-_re_index = dict(YMD=_date_re_ymd, DMY=_date_re_dmy, MDY=_date_re_mdy)
+_date_re_ym = re.compile(r'''\b
+        (?P<year>\d{4})                       # 4 digits
+        (?:\((?P<year_jc>\d{2,4})\))?         # optional 4 digits in parens fo JC
+        ([.-/])                           # separator character
+        (?P<mon>\d{2})                    # 2 digits
+        (?:\((?P<mon_jc>\d{2})\))?        # optional 2 digits in parens fo JC
+\b
+''', re.X)
+
+_date_re_y = re.compile(r'''\b
+        (?P<year>\d{4})                       # 4 digits
+        (?:\((?P<year_jc>\d{2,4})\))?         # optional 4 digits in parens fo JC
+\b
+''', re.X)
+
 
 def guessFormat(dates):
     '''
@@ -95,6 +87,7 @@ def guessFormat(dates):
     '''
     
     dates = list(dates)
+    _log.info("guessFormat: dates: %s", dates)
     
     formats = []
     for fmt in (DMY, YMD, MDY):
@@ -103,10 +96,10 @@ def guessFormat(dates):
             res = [parse(date, fmt) for date in dates]
             formats.append(fmt)
         except Exception, ex:
-            _log.error("%s", traceback.format_exc())
-            pass
+            _log.debug("guessFormat: failed: %s", ex)
     
     if len(formats) != 1:
+        _log.debug("guessFormat: formats: %s", formats)
         raise ValueError('date: unrecognized date format')
         
     return formats[0]
@@ -152,7 +145,7 @@ class Date(object):
                 res += " ({0} JC)".format(_fmtThree(date[3:], fmt, sep))
             return res
 
-        if not self.tuples: return ""
+        if self.tuples is None: return ""
         return self.dstr.format(*[_fmtSix(dt, fmt, sep) for dt in self.tuples])
 
 
@@ -162,14 +155,14 @@ def _validate(tup):
     fix = [max(1, x) for x in tup]
     datetime.date(*fix)
 
-def _parseOne(str):
-    i = str.find('(')
+def _parseOne(pstr):
+    i = pstr.find('(')
     if i < 0:
-        d = int(str)
+        d = int(pstr)
         return d, d
     else:
-        if str.endswith(')'):
-            return int(str[:i]), int(str[i+1:-1])
+        if pstr.endswith(')'):
+            return int(pstr[:i]), int(pstr[i+1:-1])
     return None, None
 
 def parse(datestr, fmt):
@@ -196,21 +189,40 @@ def parse(datestr, fmt):
     then exception is thrown.
     '''
     
+    _log.debug("date.parse: datestr=%s fmt=%s", datestr, fmt)
+    
     if not datestr: return Date(None, None)
     
     fstr = datestr
     
     tuples = []
     
-    regex = _re_index[fmt]
-    match = regex.search(fstr)
-    if match is None: raise ValueError('Date string does not contain dates, fstr="{0}" fmt={1}'.format(fstr, fmt))
     
     count = 0
-    while match:
+    while True:
+
+        # find next date
+        match = _date_re_ymd.search(fstr)
+        if match and fmt[0] != 'Y': raise ValueError('Date string in incorrect order, fstr="{0}" fmt={1}'.format(fstr, fmt))
+        if not match: 
+            match = _date_re_dmy.search(fstr)
+            if match and fmt[0] == 'Y': raise ValueError('Date string in incorrect order, fstr="{0}" fmt={1}'.format(fstr, fmt))
+        if not match: 
+            match = _date_re_my.search(fstr)
+            if match and fmt[0] == 'Y': raise ValueError('Date string in incorrect order, fstr="{0}" fmt={1}'.format(fstr, fmt))
+        if not match: 
+            match = _date_re_ym.search(fstr)
+            if match and fmt[0] != 'Y': raise ValueError('Date string in incorrect order, fstr="{0}" fmt={1}'.format(fstr, fmt))
+        if not match: match = _date_re_y.search(fstr)
+        if not match: break
         
         gd = match.groupdict(0)
-        y, m, d, yjc, mjc, djc = [int(gd[k]) for k in ('year', 'mon', 'day', 'year_jc', 'mon_jc', 'day_jc')]
+
+        y, m, d, yjc, mjc, djc = [int(gd.get(k, 0)) for k in ('year', 'mon', 'day', 'year_jc', 'mon_jc', 'day_jc')]
+        if fmt == 'MDY':
+            # MDY is DMY with swapped MD
+            m, d = d, m
+            mjc, djc = djc, mjc
         
         if (yjc, mjc, djc) == (0, 0, 0):
             dt = (y, m, d)
@@ -232,10 +244,9 @@ def parse(datestr, fmt):
                 raise
 
         tuples.append(dt)
-        fstr = fstr[:match.start('whole')] + "{{0}}".format(count) + fstr[match.end('whole'):]
-                
-        # find next
-        match = regex.search(fstr)
+        fstr = fstr[:match.start()] + "{{0}}".format(count) + fstr[match.end():]
         count += 1
 
-    return Date(tuples, fstr)
+    d = Date(tuples, fstr)
+    _log.debug("date.parse: date=%s", d)
+    return d

@@ -6,8 +6,6 @@ Created on Sep 6, 2012
 
 import logging
 
-import date
-
 _log = logging.getLogger(__name__)
 
 def _tagtext(elem, tag):

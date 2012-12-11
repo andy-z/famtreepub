@@ -4,9 +4,8 @@ Created on Sep 22, 2012
 @author: salnikov
 '''
 
-import os
 import logging
-from pysvg import shape, builders, structure
+from pysvg import shape, structure
 
 from size import Size
 from textbox import TextBox

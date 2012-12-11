@@ -7,7 +7,7 @@ Created on Sep 6, 2012
 import logging
 
 import xml.etree.ElementTree as ET
-from person import Person, Name, Doc
+from person import Person, Doc
 import date
 
 _log = logging.getLogger(__name__)
