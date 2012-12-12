@@ -181,7 +181,7 @@ class OdtWriter(object):
             # birth date and place
             p.addText(_('Born', person) + ": ")
             if person.birth.date: 
-                p.addText(str(person.birth.date))
+                p.addText(self._datefmt(person.birth.date))
             else:
                 p.addText(_('Unknown', person))
             if person.birth.place: 
@@ -206,11 +206,11 @@ class OdtWriter(object):
                 _log.debug('spouse = %s; children ids = %s; children = %s', spouse, spouse._children, spouse.children)
                 if spouse.person:
                     p = text.P(text = _('Spouse', person) + ": " + spouse.person.name.full)
-                    kids = [c.name.first for c in spouse.children]
+                    kids = [c.name.first or '?' for c in spouse.children]
                     if kids: p.addText("; " + _('kids', '') + ': ' + ', '.join(kids))
                     doc.text.addElement(p)
                 else:
-                    own_kids += [c.name.first for c in spouse.children]
+                    own_kids += [c.name.first or '?' for c in spouse.children]
             if own_kids: 
                 p = text.P(text = _('Kids', '') + ': ' + ', '.join(own_kids))
                 doc.text.addElement(p)
@@ -242,7 +242,7 @@ class OdtWriter(object):
                 hdr = _("Events and dates", person)
                 doc.text.addElement(text.H(text=hdr, outlinelevel=3, stylename=h3style))
             for evt in events:
-                p = text.P(text = str(evt[0]) + ": " + evt[1])
+                p = text.P(text = self._datefmt(evt[0]) + ": " + evt[1])
                 doc.text.addElement(p)
             
 
@@ -410,3 +410,8 @@ class OdtWriter(object):
             tbl.addElement(row)
 
         return tbl
+
+    def _datefmt(self, date):
+        
+        fmt = self.config['date_format']
+        return date.fmt(fmt[:3], fmt[-1])

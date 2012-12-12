@@ -5,6 +5,7 @@ Created on Sep 6, 2012
 '''
 
 import logging
+import traceback
 
 import xml.etree.ElementTree as ET
 from person import Person, Doc
@@ -39,6 +40,7 @@ class DrevoReader(object):
         try:
             tree = ET.parse(xml)
         except:
+            _log.error("%s", traceback.format_exc())
             raise ValueError("Not well-formed XML file")
         root = tree.getroot()
 

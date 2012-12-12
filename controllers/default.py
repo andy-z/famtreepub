@@ -38,33 +38,34 @@ def _validateFileForm(form):
     # at this point form data are not on disk yet, and form contains complete
     # file data, not a file name.
 
+    input_data = db.input_data(form.vars.id)
+    logger.info('index: input file: %s', input_data)
     try:
-        validator.validate(form.vars.input_file.file)
-        # oon success set hidden fields
-        form.vars.original_name = request.vars.input_file.filename
-        form.vars.created = datetime.datetime.now()
+        validator.validate(os.path.join(request.folder, 'uploads', input_data.input_file))
+        # on success set hidden fields
+        input_data.update_record(original_name = request.vars.input_file.filename, created = datetime.datetime.now())
+        logger.info('index: validation succeeded')
+        return True
     except Exception, ex:
         # if validation fails then display an error
         form.errors.input_file = T('file_validation_failed') + ': ' + str(ex)
         _log.error("%s", traceback.format_exc())
+        logger.info('index: validation failed')
+        return False
 
 def index():
     
     form = SQLFORM(db.input_data, submit_button=T("Upload"))
-    if form.process(onvalidation=_validateFileForm).accepted:
+    if form.process().accepted:
         
-        input_data = db.input_data(form.vars.id)
-        logger.debug('input file: %s', input_data)
+        if _validateFileForm(form):
         
-        # save file id in a session and go to options page
-        session.input_data_id = form.vars.id
-        if form.vars.output_type == 'OpenDocument':
-            redirect(URL(options_odt))
-        else:
-            redirect(URL(options_html))
-    else:
-        # remove file from the form, otherwise it is sent bach withthe full file contents
-        if 'input_file' in form.vars: del form.vars.input_file
+            # save file id in a session and go to options page
+            session.input_data_id = form.vars.id
+            if form.vars.output_type == 'OpenDocument':
+                redirect(URL(options_odt))
+            else:
+                redirect(URL(options_html))
          
     return dict(form=form)
 

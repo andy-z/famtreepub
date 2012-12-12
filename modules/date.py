@@ -96,7 +96,8 @@ def guessFormat(dates):
             res = [parse(date, fmt) for date in dates]
             formats.append(fmt)
         except Exception, ex:
-            _log.debug("guessFormat: failed: %s", ex)
+            #_log.debug("guessFormat: failed: %s", ex)
+            pass
     
     if len(formats) != 1:
         _log.debug("guessFormat: formats: %s", formats)
@@ -189,7 +190,7 @@ def parse(datestr, fmt):
     then exception is thrown.
     '''
     
-    _log.debug("date.parse: datestr=%s fmt=%s", datestr, fmt)
+    #_log.debug("date.parse: datestr=%s fmt=%s", datestr, fmt)
     
     if not datestr: return Date(None, None)
     
@@ -217,7 +218,7 @@ def parse(datestr, fmt):
         if not match: break
         
         
-        _log.debug('date.parse: match=%s', match.group(0))
+        #_log.debug('date.parse: match=%s', match.group(0))
         gd = match.groupdict(0)
 
         y, m, d, yjc, mjc, djc = [int(gd.get(k, 0)) for k in ('year', 'mon', 'day', 'year_jc', 'mon_jc', 'day_jc')]
@@ -250,5 +251,5 @@ def parse(datestr, fmt):
         count += 1
 
     d = Date(tuples, fstr)
-    _log.debug("date.parse: date=%s", d)
+    #_log.debug("date.parse: date=%s", d)
     return d
