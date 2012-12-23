@@ -43,6 +43,7 @@ def _validateFileForm(form):
         # oon success set hidden fields
         form.vars.original_name = request.vars.input_file.filename
         form.vars.created = datetime.datetime.now()
+        form.vars.input_file.file.seek(0)
     except Exception, ex:
         # if validation fails then display an error
         form.errors.input_file = T('file_validation_failed') + ': ' + str(ex)
