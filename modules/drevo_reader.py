@@ -43,6 +43,11 @@ class DrevoReader(object):
             _log.error("%s", traceback.format_exc())
             raise ValueError("Not well-formed XML file")
         root = tree.getroot()
+        
+        if root.tag != 'Pers':
+            raise ValueError("Unexpected XML tag")
+        if not list(root):
+            raise ValueError("File is empty")
 
         # first step is to guess date formats, collect all dates and 
         # feed them to the date parser, it will raise exception if 

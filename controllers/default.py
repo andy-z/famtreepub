@@ -56,7 +56,7 @@ def _validateFileForm(form):
 def index():
     
     form = SQLFORM(db.input_data, submit_button=T("Upload"))
-    if form.process().accepted:
+    if form.process(onsuccess=None).accepted:
         
         if _validateFileForm(form):
         
@@ -66,7 +66,7 @@ def index():
                 redirect(URL(options_odt))
             else:
                 redirect(URL(options_html))
-         
+            
     return dict(form=form)
 
 

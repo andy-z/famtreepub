@@ -23,4 +23,6 @@ def validate(arg):
     if floc is None:
         raise ValueError('File %s does not exist' % arg)
     
-    DrevoReader(floc)
+    reader = DrevoReader(floc)
+    if not reader.people:
+        raise ValueError('File has no persons')

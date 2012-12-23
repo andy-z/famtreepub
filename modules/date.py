@@ -88,6 +88,9 @@ def guessFormat(dates):
     
     dates = list(dates)
     _log.info("guessFormat: dates: %s", dates)
+    if not dates:
+        # any format will do
+        return YMD
     
     formats = []
     for fmt in (DMY, YMD, MDY):
