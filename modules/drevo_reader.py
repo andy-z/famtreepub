@@ -44,7 +44,7 @@ class DrevoReader(object):
             raise ValueError("Not well-formed XML file")
         root = tree.getroot()
         
-        if root.tag != 'Pers':
+        if root.tag != 'agelongtree':
             raise ValueError("Unexpected XML tag")
         if not list(root):
             raise ValueError("File is empty")
