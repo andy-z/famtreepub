@@ -125,7 +125,9 @@ class Date(object):
         self.dstr = dstr
 
     def __cmp__(self, other):
-        return cmp(self.tuples[0][:3], other.tuples[0][:3])
+        tup1 = self.tuples[0] if self.tuples else ()
+        tup2 = other.tuples[0] if other.tuples else ()
+        return cmp(tup1[:3], tup2[:3])
 
     def __nonzero__(self):
         return self.tuples is not None
