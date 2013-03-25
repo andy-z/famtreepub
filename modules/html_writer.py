@@ -65,6 +65,7 @@ h1 {
   padding: 4px 0px 4px 0px;
   border-radius: 0.2em;
   box-shadow: 4px 4px 4px #555;
+  clear:both;
 }
 h2 {
   background-color: #e0e0e0;
@@ -74,6 +75,7 @@ h2 {
   padding: 4px 0px 4px 0px;
   border-radius: 0.2em;
   box-shadow: 4px 4px 4px #555;
+  clear:both;
 }
 h3 {
   text-align: center;
@@ -103,12 +105,14 @@ h1 {
   width: 100%%;
   padding: 4px 0px 4px 0px;
   page-break-before: always;
-  border: solid black 1pt; 
+  border: solid black 1pt;
+  clear:both;
 }
 h2 {
   text-align: center;
   width: 100%%;
   padding: 4px 0px 4px 0px;
+  clear:both;
 }
 h3 {
   text-align: center;
@@ -333,15 +337,22 @@ class HtmlWriter(object):
                 maxsize = (self.config.getSize('image_width').px, self.config.getSize('image_height').px)
                 size = utils.resize(img.size, maxsize)
                 if size != img.size:
+                    # means size was reduced
                     _log.debug('Resize image to %s', size)
                     img = img.resize(size, Image.ANTIALIAS)
+                    imgsize = ""
+                else:
+                    # means size was not changed and image is smaller than box, 
+                    # we may want to extend it
+                    extend = utils.resize(img.size, maxsize, False)
+                    imgsize = ' width="{}" height="{}"'.format(*extend)
     
                 # save to a buffer
                 imgfile = StringIO()
                 img.save(imgfile, 'JPEG')
                 imgfile.seek(0)
 
-                return '<img class="personImage" src="data:image/jpg;base64,' + base64.b64encode(imgfile.read()) + '">'
+                return '<img class="personImage"' + imgsize + ' src="data:image/jpg;base64,' + base64.b64encode(imgfile.read()) + '">'
         
         
     def _getParentTree(self, person):

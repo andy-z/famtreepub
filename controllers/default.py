@@ -158,6 +158,10 @@ def options_html():
                  INPUT(_type='number', _name='html_image_height', _style='width: 50px', _value=_optval('html_image_height', '300')) +
                  ' ' + T('pixels'))]
     
+    checked = _optval('html_image_upscale', '') == 'checked'
+    options += [(T('Upscale images')+': ',
+               INPUT(_type='checkbox', _name='html_image_upscale', _value='checked', value=checked))]
+    
     fmtoptions = [OPTION(T('31.12.2001'), _value='DMY.'),
                   OPTION(T('31/12/2001'), _value='DMY/'),
                   OPTION(T('2001-12-31'), _value='YMD-'),
@@ -178,6 +182,7 @@ def options_html():
         config['page_width'] = form.vars.html_page_width+'px'
         config['image_width'] = form.vars.html_image_width+'px'
         config['image_height'] = form.vars.html_image_height+'px'
+        config['image_upscale'] = form.vars.html_image_upscale == 'checked'
         config['date_format'] = form.vars.datefmt
 
         # convert it
