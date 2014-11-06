@@ -20,39 +20,40 @@ _log = logging.getLogger(__name__)
 
 
 class _PersonBox(object):
-    
+
     _margin = Size('1pt')
-    
+
     def __init__(self, person, gen, motherBox, fatherBox, box_width, max_box_width, font_size, gen_dist):
         self.mother = motherBox
         self.father = fatherBox
         self.generation = gen
-        
+
         # displayed persons name
         if person is None:
             self.name = '?'
         elif gen == 0:
             self.name = (person.name.first or '') + ' ' + (person.name.maiden or person.name.last or '')
+            if not self.name.strip(): self.name = '...'
         else:
             self.name = (person.name.first or '') + ' ' + (person.name.last or '')
         style = _rect_unknown_style if person is None else _rect_style
         href = None if person is None else ('#person.' + person.id)
-        x0 = gen*(gen_dist + box_width) + Size('1pt')
+        x0 = gen * (gen_dist + box_width) + Size('1pt')
         self.box = TextBox(text=self.name, x0=x0, width=box_width, maxwidth=max_box_width, font_size=font_size, rect_style=style, href=href)
-        
+
         self.setY0(Size())
 
     def height(self):
 
         h = Size()
         if self.mother:
-            h = self.mother.height() + self.father.height() + 2*self._margin
-        h = max(h, self.box.height + 2*self._margin)
+            h = self.mother.height() + self.father.height() + 2 * self._margin
+        h = max(h, self.box.height + 2 * self._margin)
         _log.debug('_PersonBox.name = %s; height = %s', self.name, h)
         return h
-    
+
     def setY0(self, y0):
-        
+
         _log.debug('_PersonBox.name = %s; setY0 = %s', self.name, y0)
         if self.mother:
             self.mother.setY0(y0 + self._margin)
@@ -61,12 +62,12 @@ class _PersonBox(object):
             self.box.y0 = (self.mother.box.midy + self.father.box.midy - self.box.height) / 2
         else:
             self.box.y0 = y0 + self._margin
-            
+
     def svg(self, units='in'):
 
         textclass = None if self.name == '?' else 'svglink'
         elements = self.box.svg(textclass, units)
-    
+
         if self.mother:
             x0 = self.box.x1
             y0 = self.box.midy
@@ -75,15 +76,15 @@ class _PersonBox(object):
             y1 = pbox1.box.midy
             midx = (x0 + x1) / 2
             style = _pline_unknown_style if pbox1.name == '?' else _pline_style
-            elements.append(shape.line(X1=x0^units, Y1=y0^units, X2=midx^units, Y2=y0^units, style=_pline_style))
-            elements.append(shape.line(X1=midx^units, Y1=y0^units, X2=midx^units, Y2=y1^units, style=style))
-            elements.append(shape.line(X1=midx^units, Y1=y1^units, X2=x1^units, Y2=y1^units, style=style))
+            elements.append(shape.line(X1=x0 ^ units, Y1=y0 ^ units, X2=midx ^ units, Y2=y0 ^ units, style=_pline_style))
+            elements.append(shape.line(X1=midx ^ units, Y1=y0 ^ units, X2=midx ^ units, Y2=y1 ^ units, style=style))
+            elements.append(shape.line(X1=midx ^ units, Y1=y1 ^ units, X2=x1 ^ units, Y2=y1 ^ units, style=style))
             pbox2 = self.father
             y1 = pbox2.box.midy
             style = _pline_unknown_style if pbox2.name == '?' else _pline_style
-            elements.append(shape.line(X1=midx^units, Y1=y0^units, X2=midx^units, Y2=y1^units, style=style))
-            elements.append(shape.line(X1=midx^units, Y1=y1^units, X2=x1^units, Y2=y1^units, style=style))
-            
+            elements.append(shape.line(X1=midx ^ units, Y1=y0 ^ units, X2=midx ^ units, Y2=y1 ^ units, style=style))
+            elements.append(shape.line(X1=midx ^ units, Y1=y1 ^ units, X2=x1 ^ units, Y2=y1 ^ units, style=style))
+
         return elements
 
 class Plotter(object):
@@ -93,7 +94,7 @@ class Plotter(object):
         '''
         Constructor
         '''
-        
+
         self.max_gen = max_gen
         self.width = Size(width)
         self.gen_dist = Size(gen_dist)
@@ -102,7 +103,7 @@ class Plotter(object):
         self.refs = refs
         self.vmargin = Size("4pt")
         self.vmargin2 = Size("6pt")
-    
+
     def parent_tree(self, person, units):
         """
         Plot parent tree of a person, max_gen gives the max total number of generations plotted.
@@ -110,13 +111,13 @@ class Plotter(object):
         Returns 4-tuple: image data, mime-type, image width, image height.
         If tree cannot be plotted (e.g. when person has no parents) then None is returned
         """
-        
-        
+
+
         # returns number known generations for a person
         def _genDepth(person):
             if not person: return 0
             return max(_genDepth(person.father), _genDepth(person.mother)) + 1
-        
+
         # generator for person parents, returns None for unknown parent
         def _boxes(box):
             yield box
@@ -131,17 +132,17 @@ class Plotter(object):
 
         # if no parents then do not plot anything
         if ngen < 2: return
-                
+
         # calculate horizontal size of each box
-        box_width = (self.width - (ngen-1)*self.gen_dist - Size('2pt')) / self.max_gen
-        max_box_width = (self.width - (ngen-1)*self.gen_dist - Size('2pt')) / ngen
-        
+        box_width = (self.width - (ngen - 1) * self.gen_dist - Size('2pt')) / self.max_gen
+        max_box_width = (self.width - (ngen - 1) * self.gen_dist - Size('2pt')) / ngen
+
         # build tree of boxes
         boxtree = self._makeTree(person, 0, ngen, box_width, max_box_width)
 
         # get full height
         height = boxtree.height()
-        
+
         # update box width for every generation and calculate total width
         width = Size('1pt')
         for gen in range(ngen):
@@ -155,7 +156,7 @@ class Plotter(object):
         width += Size('1pt')
 
         # produce complete XML
-        svg = structure.svg(width=width^units, height=height^units)
+        svg = structure.svg(width=width ^ units, height=height ^ units)
         for pbox in _boxes(boxtree):
             for element in pbox.svg(units):
                 svg.addElement(element)
@@ -164,19 +165,18 @@ class Plotter(object):
         xml = svg.getXML()
         if self.fullxml:
             xml = svg.wrap_xml(xml, encoding='UTF-8')
-        
+
         return xml, 'image/svg', width, height
 
 
     def _makeTree(self, person, gen, max_gen, box_width, max_box_width):
-        
+
         if gen < max_gen:
 
-            motherTree = None            
+            motherTree = None
             fatherTree = None
             if person and (person.mother or person.father):
-                motherTree = self._makeTree(person.mother, gen+1, max_gen, box_width, max_box_width)
-                fatherTree = self._makeTree(person.father, gen+1, max_gen, box_width, max_box_width)
+                motherTree = self._makeTree(person.mother, gen + 1, max_gen, box_width, max_box_width)
+                fatherTree = self._makeTree(person.father, gen + 1, max_gen, box_width, max_box_width)
             box = _PersonBox(person, gen, motherTree, fatherTree, box_width, max_box_width, self.font_size, self.gen_dist)
             return box
-        

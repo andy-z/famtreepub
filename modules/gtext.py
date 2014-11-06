@@ -5,18 +5,23 @@ Created on Sep 8, 2012
 @author: salnikov
 '''
 
-def gtext(txt, person = None):
+def gtext(txt, person=None):
     if txt == 'Unknown': return u'Неизвестно'
-    if txt == 'Born' and person.sex == 'M': return u'Родился'
-    if txt == 'Born' and person.sex == 'F': return u'Родилась'
-    if txt == 'Died' and person.sex == 'M': return u'Умер'
-    if txt == 'Died' and person.sex == 'F': return u'Умерла'
+    if txt == 'Born':
+        if person.sex == 'F': return u'Родилась'
+        return u'Родился'
+    if txt == 'Died':
+        if person.sex == 'F': return u'Умерла'
+        return u'Умер'
     if txt == 'Mother': return u'Мать'
     if txt == 'Father': return u'Отец'
-    if txt == 'Spouse' and person.sex == 'M': return u'Супруга'
-    if txt == 'Spouse' and person.sex == 'F': return u'Супруг'
-    if txt == 'kid' and person.sex == 'M': return u'сын'
-    if txt == 'kid' and person.sex == 'F': return u'дочь'
+    if txt == 'Spouse':
+        if person.sex == 'M': return u'Супруга'
+        return u'Супруг'
+    if txt == 'kid':
+        if person.sex == 'M': return u'сын'
+        if person.sex == 'F': return u'дочь'
+        return ''
     if txt == 'kids': return u'дети'
     if txt == 'Kids': return u'Дети'
     if txt == 'Marriage': return u'Свадьба'

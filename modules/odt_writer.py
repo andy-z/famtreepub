@@ -229,7 +229,7 @@ class OdtWriter(object):
                 # kids birth dates
                 for kid in spouse.children:
                     if kid.birth.date:
-                        descr = _('Born', kid) + " " + _('kid', kid) + " " + kid.name.first
+                        descr = _('Born', kid) + " " + _('kid', kid) + " " + (kid.name.first or '...')
                         events.append((kid.birth.date, descr))
 
             if person.death.date:
