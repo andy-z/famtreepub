@@ -12,5 +12,5 @@ using package URL https://github.com/andy-z/famtreepub/raw/master/web2py.app.fam
 
 Alternatively you can clone famtreepub repository into web2py application directory
 
-    cd web2py\applications
+    cd web2py/applications
     git clone https://github.com/andy-z/famtreepub.git
