@@ -76,14 +76,14 @@ class _PersonBox(object):
             y1 = pbox1.box.midy
             midx = (x0 + x1) / 2
             style = _pline_unknown_style if pbox1.name == '?' else _pline_style
-            elements.append(shape.line(X1=x0 ^ units, Y1=y0 ^ units, X2=midx ^ units, Y2=y0 ^ units, style=_pline_style))
-            elements.append(shape.line(X1=midx ^ units, Y1=y0 ^ units, X2=midx ^ units, Y2=y1 ^ units, style=style))
-            elements.append(shape.line(X1=midx ^ units, Y1=y1 ^ units, X2=x1 ^ units, Y2=y1 ^ units, style=style))
+            elements.append(shape.Line(X1=x0 ^ units, Y1=y0 ^ units, X2=midx ^ units, Y2=y0 ^ units, style=_pline_style))
+            elements.append(shape.Line(X1=midx ^ units, Y1=y0 ^ units, X2=midx ^ units, Y2=y1 ^ units, style=style))
+            elements.append(shape.Line(X1=midx ^ units, Y1=y1 ^ units, X2=x1 ^ units, Y2=y1 ^ units, style=style))
             pbox2 = self.father
             y1 = pbox2.box.midy
             style = _pline_unknown_style if pbox2.name == '?' else _pline_style
-            elements.append(shape.line(X1=midx ^ units, Y1=y0 ^ units, X2=midx ^ units, Y2=y1 ^ units, style=style))
-            elements.append(shape.line(X1=midx ^ units, Y1=y1 ^ units, X2=x1 ^ units, Y2=y1 ^ units, style=style))
+            elements.append(shape.Line(X1=midx ^ units, Y1=y0 ^ units, X2=midx ^ units, Y2=y1 ^ units, style=style))
+            elements.append(shape.Line(X1=midx ^ units, Y1=y1 ^ units, X2=x1 ^ units, Y2=y1 ^ units, style=style))
 
         return elements
 
@@ -107,7 +107,7 @@ class Plotter(object):
     def parent_tree(self, person, units):
         """
         Plot parent tree of a person, max_gen gives the max total number of generations plotted.
-        
+
         Returns 4-tuple: image data, mime-type, image width, image height.
         If tree cannot be plotted (e.g. when person has no parents) then None is returned
         """
@@ -156,7 +156,7 @@ class Plotter(object):
         width += Size('1pt')
 
         # produce complete XML
-        svg = structure.svg(width=width ^ units, height=height ^ units)
+        svg = structure.Svg(width=width ^ units, height=height ^ units)
         for pbox in _boxes(boxtree):
             for element in pbox.svg(units):
                 svg.addElement(element)

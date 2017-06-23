@@ -351,7 +351,7 @@ class OdtWriter(object):
         imgdata, imgtype, width, height = img
         
         # store image
-        filename = "Pictures/" + hashlib.sha1(imgdata).hexdigest() + '.svg'
+        filename = u"Pictures/" + hashlib.sha1(imgdata).hexdigest() + '.svg'
         imgref = doc.addPicture(filename, imgtype, imgdata)
         
         frame = draw.Frame(width=str(width), height=str(height))

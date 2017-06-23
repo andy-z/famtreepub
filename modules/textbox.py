@@ -102,16 +102,16 @@ class TextBox(object):
         # render box
         kw = dict(x=self.x0^units, y=self.y0^units, width=self.width^units, height=self.height^units)
         if self._rect_style: kw['style'] = self._rect_style
-        rect = shape.rect(**kw)
+        rect = shape.Rect(**kw)
         shapes.append(rect)
         
         # render text
         kw = dict(text_anchor='middle', font_size=self._font_size^'pt')
         if self._text_style: kw['style'] = self._text_style
         if textclass: kw['class'] = textclass
-        txt = text.text(**kw)
+        txt = text.Text(**kw)
         if self._href:
-            a = linking.a()
+            a = linking.A()
             a.addElement(txt)
             a.set_xlink_href(self._href)
             shapes.append(a)
@@ -120,7 +120,7 @@ class TextBox(object):
         for i, line in enumerate(self._lines):
             x = self.midx
             y = self.y0 + self._padding + self._font_size*(i+1) + self._line_spacing*i
-            tspan = text.tspan(x=x^units, y=y^units)
+            tspan = text.Tspan(x=x ^ units, y=y ^ units)
             tspan.appendTextContent(line.encode('utf_8'))
             txt.addElement(tspan)
             
