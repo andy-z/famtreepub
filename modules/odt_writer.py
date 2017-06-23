@@ -325,7 +325,7 @@ class OdtWriter(object):
                 imgdata = imgfile.read()
                 imgfile = StringIO(imgdata)
                 img = Image.open(imgfile)
-                filename = "Pictures/" + hashlib.sha1(imgdata).hexdigest() + '.' +img.format
+                filename = u"Pictures/" + hashlib.sha1(imgdata).hexdigest() + '.' +img.format
     
                 # calculate size of the frame
                 maxsize = (self.config.getSize('image_width').inches, self.config.getSize('image_height').inches)
