@@ -46,7 +46,7 @@ def _validateFileForm(form):
         input_data.update_record(original_name=request.vars.input_file.filename, created=datetime.datetime.now())
         logger.info('index: validation succeeded')
         return True
-    except Exception, ex:
+    except Exception as ex:
         # if validation fails then display an error
         form.errors.input_file = T('file_validation_failed') + ': ' + str(ex)
         _log.error("%s", traceback.format_exc())
