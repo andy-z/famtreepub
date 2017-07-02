@@ -39,7 +39,8 @@ class _PersonBox(object):
         style = _rect_unknown_style if person is None else _rect_style
         href = None if person is None else ('#person.' + person.id)
         x0 = gen * (gen_dist + box_width) + Size('1pt')
-        self.box = TextBox(text=self.name, x0=x0, width=box_width, maxwidth=max_box_width, font_size=font_size, rect_style=style, href=href)
+        self.box = TextBox(text=self.name, x0=x0, width=box_width, maxwidth=max_box_width,
+                           font_size=font_size, rect_style=style, href=href)
 
         self.setY0(Size())
 
