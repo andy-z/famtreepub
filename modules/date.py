@@ -105,6 +105,8 @@ def guessFormat(dates):
     if len(formats) != 1:
         _log.debug("guessFormat: formats: %s", formats)
         raise ValueError('date: unrecognized date format')
+    else:
+        _log.info("guessFormat: found format: %s", formats[0])
         
     return formats[0]
 
@@ -237,7 +239,7 @@ def parse(datestr, fmt):
             try:
                 _validate(dt)
             except Exception, ex:
-                _log.error("validation error: ex={0} fstr={1} dt={2}".format(str(ex), fstr, dt))
+                # _log.error("validation error: ex={0} fstr={1} dt={2}".format(str(ex), fstr, dt))
                 raise
         else:
             if yjc == 0: yjc = y
@@ -248,7 +250,7 @@ def parse(datestr, fmt):
                 _validate(dt[:3])
                 _validate(dt[3:])
             except Exception, ex:
-                _log.error("validation error: ex={0} fstr={1} dt={2}".format(str(ex), fstr, dt))
+                # _log.error("validation error: ex={0} fstr={1} dt={2}".format(str(ex), fstr, dt))
                 raise
 
         tuples.append(dt)
