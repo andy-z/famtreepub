@@ -53,6 +53,7 @@ def _validateFileForm(form):
         _log.info('index: validation failed')
         return False
 
+
 def index():
 
     form = SQLFORM(db.input_data, submit_button=T("Upload"))
@@ -200,6 +201,13 @@ def options_html():
 
     return dict(form=form)
 
+
+def language():
+    session.ui_lang = request.vars['lang']
+    if request.env.http_referer:
+        redirect(request.env.http_referer)
+    else:
+        redirect(URL(index))
 
 def error():
     return dict()
