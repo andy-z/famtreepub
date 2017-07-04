@@ -48,13 +48,15 @@ def _validateFileForm(form):
     except Exception as ex:
         # if validation fails then display an error
         form.errors.input_file = T('file_validation_failed') + ': ' + str(ex)
-        _log.error("%s", traceback.format_exc())
-        _log.info('index: validation failed')
+        _log.info('index: validation failed', exc_info=True)
         return False
 
 
 def index():
+    """Landing page.
 
+    Shows upload form for an input file.
+    """
     form = SQLFORM(db.input_data, submit_button=T("Upload"))
     if form.process(onsuccess=None).accepted:
 
@@ -71,7 +73,11 @@ def index():
 
 
 def options_odt():
+    """OpenDocument options page.
 
+    Shows bunch of options for conversion to ODT format. Converts to ODF
+    using those options.
+    """
     if session.input_data_id is None: redirect(URL(index))
 
     # get
@@ -143,7 +149,11 @@ def options_odt():
     return dict(form=form)
 
 def options_html():
+    """HTML options page.
 
+    Shows bunch of options for conversion to HTML format. Converts to HTML
+    using those options.
+    """
     if session.input_data_id is None: redirect(URL(index))
 
     # get

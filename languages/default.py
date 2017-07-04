@@ -134,9 +134,9 @@
 'welcome_page_title': 'Welcome to Family Tree Publisher',
 'welcome_page_body': '''\
 Family tree publisher is a web application which creates printable or hypertext reports based on family data exported from a 
-popular genealogical application Agelong Tree (http://www.genery.com/). Publisher can accept either XML file produced by 
-File..Export..XML command in Agelong Tree, or ZIP archive containing XML file and images. To produce ZIP file one needs 
-to export data using the same File..Export..XML command and make sure that "Export photos" is enabled, then pack all
+popular genealogical application [[Agelong Tree http://www.genery.com/]]. Publisher can accept either XML file produced by
+``File ▶ Export ▶ XML`` command in Agelong Tree, or ZIP archive containing XML file and images. To produce ZIP file one needs
+to export data using the same ``File ▶ Export ▶ XML`` command and make sure that "Export photos" is enabled, then pack all
 exported files into a single ZIP file. To produce reports with photos one has to create ZIP file, XML files does not include 
 any photos.
 

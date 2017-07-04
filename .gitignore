@@ -4,3 +4,6 @@ errors/
 databases/
 sessions/
 uploads/
+.settings/org.eclipse.core.resources.prefs
+.pydevproject
+*.project
