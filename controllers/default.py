@@ -19,8 +19,8 @@ import validator
 from odt_writer import OdtWriter
 from html_writer import HtmlWriter
 
-_log = logging.getLogger(__name__)
-
+_log = logging.getLogger("web2py.app.famtreepub")
+_log.setLevel(logging.DEBUG)
 
 def _optval(name, defval):
     '''Get option value from a session or use default if session does not have it.'''
@@ -39,18 +39,18 @@ def _validateFileForm(form):
     # file data, not a file name.
 
     input_data = db.input_data(form.vars.id)
-    logger.info('index: input file: %s', input_data)
+    _log.info('index: input file: %s', input_data)
     try:
         validator.validate(os.path.join(request.folder, 'uploads', input_data.input_file))
         # on success set hidden fields
         input_data.update_record(original_name=request.vars.input_file.filename, created=datetime.datetime.now())
-        logger.info('index: validation succeeded')
+        _log.info('index: validation succeeded')
         return True
     except Exception as ex:
         # if validation fails then display an error
         form.errors.input_file = T('file_validation_failed') + ': ' + str(ex)
         _log.error("%s", traceback.format_exc())
-        logger.info('index: validation failed')
+        _log.info('index: validation failed')
         return False
 
 def index():
