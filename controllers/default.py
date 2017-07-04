@@ -8,11 +8,10 @@ def call(): return service()
 import os
 import logging
 import datetime
-from StringIO import StringIO
 import tempfile
 import traceback
 
-import applications.famtreepub.modules.config as cfg_mod
+import ftp_config
 from drevo_reader import DrevoReader
 from input import FileLocator
 import validator
@@ -115,7 +114,7 @@ def options_odt():
         session.options = form.vars
 
         # all config options
-        config = cfg_mod.Config()
+        config = ftp_config.Config()
         config['page_width'] = form.vars.page_width + form.vars.units
         config['page_height'] = form.vars.page_height + form.vars.units
         config['margin_left'] = form.vars.margin_left + form.vars.units
@@ -179,7 +178,7 @@ def options_html():
         session.options = form.vars
 
         # all config options
-        config = cfg_mod.Config()
+        config = ftp_config.Config()
         config['page_width'] = form.vars.html_page_width + 'px'
         config['image_width'] = form.vars.html_image_width + 'px'
         config['image_height'] = form.vars.html_image_height + 'px'
@@ -203,6 +202,12 @@ def options_html():
 
 
 def language():
+    """Set preferred language.
+
+    Get language code from a request variable and remembers it in a session.
+    The code in models/lang module uses this session variable to change
+    translation language. Redirects back to the referrer page.
+    """
     session.ui_lang = request.vars['lang']
     if request.env.http_referer:
         redirect(request.env.http_referer)
