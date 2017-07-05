@@ -33,9 +33,9 @@ class Size(object):
         If input value has unsupported type TypeError is raised.
         '''
 
-        if type(value) in [types.FloatType, types.IntType, types.LongType]:
+        if isinstance(value, (types.FloatType, types.IntType, types.LongType)):
             self.value = float(value)
-        elif type(value) in types.StringTypes:
+        elif isinstance(value, types.StringTypes):
             # convert units to inches
             if value.endswith('pt'):
                 self.value = float(value[:-2]) / 72.
@@ -127,7 +127,6 @@ if __name__ == "__main__":
 
             self.assertEqual(Size().value, 0.)
             self.assertEqual(Size(1).value, 1.)
-            self.assertEqual(Size(1L).value, 1.)
             self.assertEqual(Size(1.).value, 1.)
 
         def test_2_str(self):

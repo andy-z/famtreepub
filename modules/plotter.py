@@ -7,8 +7,8 @@ Created on Sep 22, 2012
 import logging
 from pysvg import shape, structure
 
-from size import Size
-from textbox import TextBox
+from .size import Size
+from .textbox import TextBox
 
 _rect_style = "fill:none;stroke-width:1pt;stroke:black"
 _rect_unknown_style = "fill:none;stroke-width:1pt;stroke:grey"
@@ -20,6 +20,22 @@ _log = logging.getLogger(__name__)
 
 
 class _PersonBox(object):
+    """Class implementing "drawing" of SVG box with person name.
+
+    Parameters
+    ----------
+    person : `Person`
+    gen : int
+        Generation number, 0 for the tree root
+    motherBox : `_PersonBox`
+    fatherBox : `_PersonBox`
+        Boxes for parents
+    box_width : `Size`
+    max_box_width : `Size`
+    font_size : `Size`
+    gen_dist : `Size`
+        Distance between boxes of different generations
+    """
 
     _margin = Size('1pt')
 
@@ -45,7 +61,8 @@ class _PersonBox(object):
         self.setY0(Size())
 
     def height(self):
-
+        """Calculate the height of the whole tree including (grand)parent boxes.
+        """
         h = Size()
         if self.mother:
             h = self.mother.height() + self.father.height() + 2 * self._margin
@@ -54,7 +71,8 @@ class _PersonBox(object):
         return h
 
     def setY0(self, y0):
-
+        """REcalculate Y position of box tree so that topmost box is at `y0`.
+        """
         _log.debug('_PersonBox.name = %s; setY0 = %s', self.name, y0)
         if self.mother:
             self.mother.setY0(y0 + self._margin)
@@ -65,7 +83,8 @@ class _PersonBox(object):
             self.box.y0 = y0 + self._margin
 
     def svg(self, units='in'):
-
+        """Generate SVG (XML) for this box including links to parents
+        """
         textclass = None if self.name == '?' else 'svglink'
         elements = self.box.svg(textclass, units)
 
@@ -89,13 +108,25 @@ class _PersonBox(object):
         return elements
 
 class Plotter(object):
+    """Class implementing plotting of the person trees.
 
+    Parameters
+    ----------
+    max_gen : int, optional
+        Maximum number of generations to plot, default is 4
+    width : str, optional
+        Specification for plot width, accepts any CSS-style lenght, default is "5in"
+    gen_dist : str, optional
+        Distance between generations, accepts any CSS-style lenght, default is "12pt"
+    font_size : str, optional
+        Font size, accepts any CSS-style size, default is "10pt"
+    full_xml : boolean, optional
+        If True (default) produce full XML document with headers, otherwise only SVG contents.
+    refs : boolean, optional
+        If True make person name a link. This parameter is ignored for now, links are always made.
+    """
 
     def __init__(self, max_gen=4, width="5in", gen_dist="12pt", font_size="10pt", fullxml=True, refs=False):
-        '''
-        Constructor
-        '''
-
         self.max_gen = max_gen
         self.width = Size(width)
         self.gen_dist = Size(gen_dist)
@@ -106,13 +137,27 @@ class Plotter(object):
         self.vmargin2 = Size("6pt")
 
     def parent_tree(self, person, units):
-        """
-        Plot parent tree of a person, max_gen gives the max total number of generations plotted.
+        """Plot parent tree of a person, max_gen gives the max total number of generations plotted.
 
-        Returns 4-tuple: image data, mime-type, image width, image height.
-        If tree cannot be plotted (e.g. when person has no parents) then None is returned
-        """
+        If tree cannot be plotted (e.g. when person has no parents) then None is returned,
+        otherwise a four-tuple is returned.
 
+        Parameters
+        ----------
+        person : `Person`
+            Person for which to plot the tree.
+        units : str
+            Units name for output, e.g. "in" or "px" (all lengths re converted to that unit).
+
+        Returns
+        -------
+        image : bytes
+            Image data (XML contents)
+        mime_type : str
+            Type of produced image (currently image/svg).
+         image_width : `Size`
+         image_height : `Size`
+        """
 
         # returns number known generations for a person
         def _genDepth(person):
@@ -171,7 +216,8 @@ class Plotter(object):
 
 
     def _makeTree(self, person, gen, max_gen, box_width, max_box_width):
-
+        """Recursively generate tree of _PersonBox instances
+        """
         if gen < max_gen:
 
             motherTree = None

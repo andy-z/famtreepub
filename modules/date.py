@@ -100,6 +100,7 @@ def guessFormat(dates):
             formats.append(fmt)
         except Exception as ex:
             # _log.debug("guessFormat: failed: %s", ex)
+            # print "guessFormat: failed: %s" % ex
             pass
 
     if len(formats) != 1:
@@ -268,7 +269,7 @@ def parse(datestr, fmt):
                 raise
 
         tuples.append(dt)
-        fstr = fstr[:match.start()] + "{{0}}".format(count) + fstr[match.end():]
+        fstr = fstr[:match.start()] + "{" + str(count) + "}" + fstr[match.end():]
         count += 1
 
     d = Date(tuples, fstr)

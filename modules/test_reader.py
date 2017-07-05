@@ -6,7 +6,8 @@ Created on Sep 6, 2012
 '''
 
 from optparse import OptionParser
-from drevo_reader import DrevoReader 
+
+from .drevo_reader import DrevoReader
 
 def main():
 
