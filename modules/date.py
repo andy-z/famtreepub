@@ -6,6 +6,10 @@ Created on Dec 7, 2012
 Module for date-related utilities.
 '''
 
+from __future__ import absolute_import, division, print_function
+
+__all__ = ['Date', 'parse', 'guessFormat', 'YMD', 'DMY', 'MDY']
+
 import re
 import datetime
 import logging
@@ -113,17 +117,35 @@ def guessFormat(dates):
 
 
 class Date(object):
+    """Class representing a date or few dates together with formatting
+    information.
+
+    Note: do not instantiate Date objects directly, use `parse()` method instead.
+
+    This class is an internal representation of the date strings which can
+    contain one or more dates plus some textual info. As an example the input
+    may have date strings like "Around 05.12.1961" or "From 1991 to 2002".
+    `parse()` method below will parse these strings and extract dates from them
+    and replace input string with format string which may look like
+    "From {0} to {1}" and will construct Date instance from all of that info.
+
+    Data instances can be compared, the first date in the input string used for
+    comparisons. They can also be formatted using `fmt()` method, the original
+    string is recreated, but the date format may be changed.
+
+    Parameters
+    ----------
+    tuples : list of tuples or None
+        If `tuples` is None then "no-date" object is constructed.
+        List can contain one or two tuples, each tuple can have 3 or 6
+        numbers. First element of tuple is year, second is month, third is day.
+        If tuple contains six elements then elements 4-6 specify Julian date.
+    dstr : str
+        Format string, e.g. "from {0} to {1}", number of substitution must
+        be equal to number of tuples in the list.
+    """
 
     def __init__(self, tuples, dstr):
-        '''
-        Constructor takes one or two tuples, tuples can have 1 to 3 numbers.
-        First element of tuple is year, second (optional) is month, third
-        (optional) is day.
-
-        If you pass None as the first argument then "no-date" object is constructed.
-
-        If second tuple is passed then it specifies Julian date.
-        '''
         self.tuples = tuples
         self.dstr = dstr
 
@@ -136,6 +158,8 @@ class Date(object):
         return self.tuples is not None
 
     def __str__(self):
+        """Default date formatting in DD.MM.YYYY format.
+        """
         return self.fmt('DMY', '.')
 
     def fmt(self, fmt, sep):
@@ -167,38 +191,40 @@ def _validate(tup):
     fix = [max(1, x) for x in tup]
     datetime.date(*fix)
 
-def _parseOne(pstr):
-    i = pstr.find('(')
-    if i < 0:
-        d = int(pstr)
-        return d, d
-    else:
-        if pstr.endswith(')'):
-            return int(pstr[:i]), int(pstr[i + 1:-1])
-    return None, None
-
 def parse(datestr, fmt):
-    '''
-    Parse date string. date string can contain arbitrary text with one or
-    few dates (like "From 01.01.1967 to 01.01.1968"). Returns Date object
+    '''Parse date string.
+
+    Date string can contain arbitrary text with one or few dates
+    (like "From 01.01.1967 to 01.01.1968").
 
     General date format is either an empty string (for no-date) or
     one to three components separated by separators (one of .-/). Each
     component is a number optionally followed by another number in
     parentheses (for Julian dates). Order of the components is defined by
-    fmt string.
+    `fmt` string.
 
-    Fmt string can be:
-        YMD - for year/month/day order, if string has two components then
-              it will be year/month
-        DMY - for day/month/year order, if string has two components then
-              it will be month/year
-        MDY - for month/day/year order, if string has two components then
-              it will be month/year
-    If string has just a single component it is always year.
+    Parameters
+    ----------
+    datestr : `str`
+        String with dates and text
+    fmt : `str`
+        One of:
+        'YMD' - for year/month/day order, if string has two components then
+                it will be year/month
+        'DMY' - for day/month/year order, if string has two components then
+                it will be month/year
+        'MDY' - for month/day/year order, if string has two components then
+                it will be month/year
+        If date string has just a single component it is always year.
 
+    Raises
+    ------
     Ranges for months and days are checked, if they are not in valid range
     then exception is thrown.
+
+    Returns
+    -------
+    Date object
     '''
 
     # _log.debug("date.parse: datestr=%s fmt=%s", datestr, fmt)
@@ -215,6 +241,7 @@ def parse(datestr, fmt):
     while True:
 
         # find next date
+        day = True
         match = _date_re_ymd.search(fstr)
         if match and fmt[0] != 'Y':
             raise ValueError('Date string in incorrect order, fstr="{0}" fmt={1}'.format(fstr, fmt))
@@ -223,6 +250,7 @@ def parse(datestr, fmt):
             if match and fmt[0] == 'Y':
                 raise ValueError('Date string in incorrect order, fstr="{0}" fmt={1}'.format(fstr, fmt))
         if not match:
+            day = False
             match = _date_re_my.search(fstr)
             if match and fmt[0] == 'Y':
                 raise ValueError('Date string in incorrect order, fstr="{0}" fmt={1}'.format(fstr, fmt))
@@ -235,14 +263,13 @@ def parse(datestr, fmt):
         if not match:
             break
 
-
         # _log.debug('date.parse: match=%s', match.group(0))
         gd = match.groupdict(0)
 
         y, m, d, yjc, mjc, djc = [int(gd.get(k, 0))
                                   for k in ('year', 'mon', 'day', 'year_jc', 'mon_jc', 'day_jc')]
-        if fmt == 'MDY':
-            # MDY is DMY with swapped MD
+        # MDY is DMY with swapped MD (only if day was present in match)
+        if fmt == 'MDY' and day:
             m, d = d, m
             mjc, djc = djc, mjc
 

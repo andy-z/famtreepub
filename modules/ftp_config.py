@@ -5,6 +5,8 @@ Created on Nov 25, 2012
 @author: salnikov
 '''
 
+from __future__ import absolute_import, division, print_function
+
 from .size import Size
 
 class Config(dict):

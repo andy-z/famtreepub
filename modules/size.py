@@ -6,6 +6,8 @@ Created on Sep 26, 2012
 @author: salnikov
 '''
 
+from __future__ import absolute_import, division, print_function
+
 import types
 
 MM_PER_INCH = 25.4
@@ -94,6 +96,10 @@ class Size(object):
         return Size(self.value * other)
 
     def __div__(self, other):
+        ''' Divide size by a factor '''
+        return Size(self.value / other)
+
+    def __truediv__(self, other):
         ''' Divide size by a factor '''
         return Size(self.value / other)
 

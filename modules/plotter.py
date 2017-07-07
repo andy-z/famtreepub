@@ -4,6 +4,8 @@ Created on Sep 22, 2012
 @author: salnikov
 '''
 
+from __future__ import absolute_import, division, print_function
+
 import logging
 from pysvg import shape, structure
 

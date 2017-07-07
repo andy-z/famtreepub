@@ -1,6 +1,10 @@
 """Unit test for size module
 """
 
+from __future__ import absolute_import, division, print_function
+
+__all__ = ['SizeUnitTest']
+
 import unittest
 
 from ..size import Size

@@ -5,6 +5,8 @@ Created on Sep 6, 2012
 @author: salnikov
 '''
 
+from __future__ import absolute_import, division, print_function
+
 from optparse import OptionParser
 
 from .drevo_reader import DrevoReader
@@ -22,7 +24,7 @@ def main():
 
     for p in reader.people:
         
-        print "%s %s" % (p.id, p.name.full)
+        print("%s %s" % (p.id, p.name.full))
 
 if __name__ == '__main__':
     main()

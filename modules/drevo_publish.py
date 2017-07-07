@@ -5,6 +5,8 @@ Created on Sep 8, 2012
 @author: salnikov
 '''
 
+from __future__ import absolute_import, division, print_function
+
 import os
 from optparse import OptionParser
 import logging
@@ -72,7 +74,7 @@ def main():
 
     writer.write(reader)
 
-    print "Finished OK"
+    print("Finished OK")
 
 
 if __name__ == '__main__':

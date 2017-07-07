@@ -1,6 +1,8 @@
 """Module for validation of the uploaded input files.
 """
 
+from __future__ import absolute_import, division, print_function
+
 import logging
 
 from .drevo_reader import DrevoReader

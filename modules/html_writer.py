@@ -5,6 +5,8 @@ Created on Sep 8, 2012
 @author: salnikov
 '''
 
+from __future__ import absolute_import, division, print_function
+
 import logging
 from cStringIO import StringIO
 import base64

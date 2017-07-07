@@ -5,6 +5,9 @@ Created on Sep 8, 2012
 @author: salnikov
 '''
 
+from __future__ import absolute_import, division, print_function
+
+
 def gtext(txt, person=None):
     if txt == 'Unknown': return u'Неизвестно'
     if txt == 'Born':
