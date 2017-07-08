@@ -3,7 +3,7 @@
 
 from __future__ import absolute_import, division, print_function
 
-__all__ = ['TestDateClass']
+__all__ = ['TestDateClass', 'TestParse', 'TestGuessFormat']
 
 import unittest
 
@@ -162,6 +162,73 @@ class TestParse(unittest.TestCase):
             d = date.parse("32.12.2000", date.DMY)
         with self.assertRaises(ValueError):
             d = date.parse("13.2000", date.DMY)
+
+
+class TestGuessFormat(unittest.TestCase):
+
+    def test_1_ymd(self):
+
+        # days are all in range 1-12
+        dates = ["1812.01.02", "1917.02.03", "2038/04", "2012"]
+        self.assertEqual(date.guessFormat(dates), date.YMD)
+
+        # dates are in range 1-31
+        dates = ["1812.01.20", "1917.02.28", "2038-04"]
+        self.assertEqual(date.guessFormat(dates), date.YMD)
+
+        # months only
+        dates = ["1812.01", "1917.02", "2038/04"]
+        self.assertEqual(date.guessFormat(dates), date.YMD)
+
+    def test_2_mdy(self):
+
+        # day must be beyond 12 to disambiguate with DMY
+        dates = ["01.02.1812", "02.23.1917", "04/2038"]
+        self.assertEqual(date.guessFormat(dates), date.MDY)
+
+    def test_3_dmy(self):
+
+        # day must be beyond 12 to disambiguate with MDY
+        dates = ["01.02.1812", "23.02.1917", "04/2038"]
+        self.assertEqual(date.guessFormat(dates), date.DMY)
+
+    def test_4_failures(self):
+
+        # year only is ambiguous
+        dates = ["1812", "1917", "2038"]
+        with self.assertRaises(ValueError):
+            date.guessFormat(dates)
+
+        # have to have three components in MDY or DMY
+        dates = ["02/1812", "13.1917", "2038"]
+        with self.assertRaises(ValueError):
+            date.guessFormat(dates)
+
+        # date must be >12 to disambiguate DMY from MDY
+        dates = ["01/02/1812"]
+        with self.assertRaises(ValueError):
+            date.guessFormat(dates)
+
+        # invalid day
+        dates = ["1812.12.32"]
+        with self.assertRaises(ValueError):
+            date.guessFormat(dates)
+
+        # invalid month
+        dates = ["1812.13.01"]
+        with self.assertRaises(ValueError):
+            date.guessFormat(dates)
+
+        # invalid day/month
+        dates = ["13.13.1812"]
+        with self.assertRaises(ValueError):
+            date.guessFormat(dates)
+
+        # just some nonsense
+        dates = ["not-a-date"]
+        with self.assertRaises(ValueError):
+            date.guessFormat(dates)
+
 
 if __name__ == "__main__":
     suite = unittest.TestLoader().loadTestsFromTestCase(TestDateClass)
