@@ -9,21 +9,93 @@ import unittest
 
 from .. import date
 
+
 class TestDateClass(unittest.TestCase):
 
     def test_1_nodate(self):
 
-        d = date.Date(None, None)
-        self.assertIsNone(d.tuples)
+        d = date.Date()
+        self.assertIsNone(d.year)
+        self.assertIsNone(d.month)
+        self.assertIsNone(d.day)
+        self.assertIsNone(d.year_jc)
+        self.assertIsNone(d.month_jc)
+        self.assertIsNone(d.day_jc)
+
+    def test_2_simple(self):
+
+        d = date.Date(2000, 12, 31)
+        self.assertEqual(d.year, 2000)
+        self.assertEqual(d.month, 12)
+        self.assertEqual(d.day, 31)
+        self.assertIsNone(d.year_jc)
+        self.assertIsNone(d.month_jc)
+        self.assertIsNone(d.day_jc)
+        self.assertEqual(str(d), "31.12.2000")
+        self.assertEqual(d.fmt(date.YMD, '-'), "2000-12-31")
+        self.assertEqual(d.fmt(date.MDY, '/'), "12/31/2000")
+        self.assertEqual(d.fmt(date.DMY, '.'), "31.12.2000")
+
+    def test_4_julian(self):
+
+        d = date.Date(2000, 12, 31, 2000, 12, 17)
+        self.assertEqual(d.year, 2000)
+        self.assertEqual(d.month, 12)
+        self.assertEqual(d.day, 31)
+        self.assertEqual(d.year_jc, 2000)
+        self.assertEqual(d.month_jc, 12)
+        self.assertEqual(d.day_jc, 17)
+        self.assertEqual(str(d), "31.12.2000 (17.12.2000 JC)")
+        self.assertEqual(d.fmt(date.YMD, '-'), "2000-12-31 (2000-12-17 JC)")
+        self.assertEqual(d.fmt(date.MDY, '/'), "12/31/2000 (12/17/2000 JC)")
+        self.assertEqual(d.fmt(date.DMY, '.'), "31.12.2000 (17.12.2000 JC)")
+
+    def test_5_cmp(self):
+
+        d1 = date.Date(2000, 12, 31)
+        d2 = date.Date(2026, 6, 6)
+        self.assertGreater(d2, d1)
+        self.assertLess(d1, d2)
+        self.assertGreaterEqual(d2, d1)
+        self.assertLessEqual(d1, d2)
+        self.assertEqual(d1, d1)
+        self.assertEqual(d2, d2)
+        self.assertLessEqual(d1, d1)
+        self.assertGreaterEqual(d1, d1)
+
+    def test_6_invalid(self):
+
+        with self.assertRaises(ValueError):
+            d1 = date.Date(2000, 12, 32)
+        with self.assertRaises(ValueError):
+            d1 = date.Date(2000, 12, -1)
+        with self.assertRaises(ValueError):
+            d1 = date.Date(2000, 13, 1)
+        with self.assertRaises(ValueError):
+            d1 = date.Date(2000, 0, 1)
+        with self.assertRaises(ValueError):
+            d1 = date.Date(2000, None, 1)
+        with self.assertRaises(ValueError):
+            d1 = date.Date(2000, 1, 1, 1999, 12, 32)
+        with self.assertRaises(ValueError):
+            d1 = date.Date(2000, 1, 1, 1999, 0, 1)
+
+
+class TestDateStringClass(unittest.TestCase):
+
+    def test_1_nodate(self):
+
+        d = date.DateString(None, None)
+        self.assertIsNone(d.dates)
         # in boolean context it evaluates to False
         self.assertFalse(d)
         self.assertEqual(str(d), "")
 
     def test_2_simple(self):
 
-        d = (2000, 12, 31)
-        d = date.Date([d], "{0}")
-        self.assertEqual(len(d.tuples), 1)
+        d = date.Date(2000, 12, 31)
+        d = date.DateString([d], "{0}")
+        self.assertEqual(len(d.dates), 1)
         # in boolean context it evaluates to True
         self.assertTrue(d)
         self.assertEqual(str(d), "31.12.2000")
@@ -33,9 +105,9 @@ class TestDateClass(unittest.TestCase):
 
     def test_3_multi(self):
 
-        d = [(2000, 12, 31), (2001, 1, 1)]
-        d = date.Date(d, "between {0} and {1}")
-        self.assertEqual(len(d.tuples), 2)
+        d = [date.Date(2000, 12, 31), date.Date(2001, 1, 1)]
+        d = date.DateString(d, "between {0} and {1}")
+        self.assertEqual(len(d.dates), 2)
         self.assertTrue(d)
         self.assertEqual(str(d), "between 31.12.2000 and 01.01.2001")
         self.assertEqual(d.fmt(date.YMD, '-'), "between 2000-12-31 and 2001-01-01")
@@ -44,9 +116,9 @@ class TestDateClass(unittest.TestCase):
 
     def test_4_julian(self):
 
-        d = (2000, 12, 31, 2000, 12, 17)
-        d = date.Date([d], "{0}")
-        self.assertEqual(len(d.tuples), 1)
+        d = date.Date(2000, 12, 31, 2000, 12, 17)
+        d = date.DateString([d], "{0}")
+        self.assertEqual(len(d.dates), 1)
         # in boolean context it evaluates to True
         self.assertTrue(d)
         self.assertEqual(str(d), "31.12.2000 (17.12.2000 JC)")
@@ -56,8 +128,8 @@ class TestDateClass(unittest.TestCase):
 
     def test_5_cmp(self):
 
-        d1 = date.Date([(2000, 12, 31)], "{0}")
-        d2 = date.Date([(2026, 6, 6)], "{0}")
+        d1 = date.DateString([date.Date(2000, 12, 31)], "{0}")
+        d2 = date.DateString([date.Date(2026, 6, 6)], "{0}")
         self.assertGreater(d2, d1)
         self.assertLess(d1, d2)
         self.assertGreaterEqual(d2, d1)
@@ -69,12 +141,12 @@ class TestDateClass(unittest.TestCase):
 
     def test_6_partial(self):
 
-        d = date.Date([(2000, 12, 0)], "{0}")
-        self.assertEqual(len(d.tuples), 1)
+        d = date.DateString([date.Date(2000, 12)], "{0}")
+        self.assertEqual(len(d.dates), 1)
         self.assertEqual(str(d), "12.2000")
 
-        d = date.Date([(2000, 0, 0)], "{0}")
-        self.assertEqual(len(d.tuples), 1)
+        d = date.DateString([date.Date(2000)], "{0}")
+        self.assertEqual(len(d.dates), 1)
         self.assertEqual(str(d), "2000")
 
 
@@ -83,12 +155,12 @@ class TestParse(unittest.TestCase):
     def test_1_nodate(self):
 
         d = date.parse("", date.YMD)
-        self.assertIsNone(d.tuples)
+        self.assertIsNone(d.dates)
         self.assertFalse(d)
         self.assertEqual(str(d), "")
 
         d = date.parse("no date", date.YMD)
-        self.assertEqual(len(d.tuples), 0)
+        self.assertEqual(len(d.dates), 0)
         self.assertEqual(str(d), "no date")
 
 

@@ -8,13 +8,14 @@ Module for date-related utilities.
 
 from __future__ import absolute_import, division, print_function
 
-__all__ = ['Date', 'parse', 'guessFormat', 'YMD', 'DMY', 'MDY']
+__all__ = ['Date', 'DateString', 'parse', 'guessFormat', 'YMD', 'DMY', 'MDY']
 
 import re
 import datetime
 import logging
 
 _log = logging.getLogger(__name__)
+
 
 # definitions for date format
 YMD = 'YMD'
@@ -27,12 +28,140 @@ YBD = 'YBD'  # 2012-December-31
 DbY = 'DbY'  # 31-Dec-2012
 DBY = 'DBY'  # 31-December-2012
 
-#
-# maps date format string to the tuple if indices, first number in
-# a tuple is a year index, second is month index, last is day index
-#
-_ymd_index = dict(YMD=(0, 1, 2), DMY=(2, 1, 0), MDY=(2, 0, 1),
-                  YbD=(0, 1, 2), YBD=(0, 1, 2), DbY=(2, 1, 0), DBY=(2, 1, 0))
+class Date(object):
+    """Date representation.
+
+    Date is a (year, month, day) triplet, each of them is optional.
+    Additionally DAte contains optional representation of the same date
+    in Julian calendar.
+
+    Dates can be compared to each other and can be formatted
+    using one of 'YMD', 'MDY', or 'DMY' formats.
+    """
+
+    # maps date format string to the tuple if indices, first number in
+    # a tuple is a year index, second is month index, last is day index
+    _ymd_index = dict(YMD=(0, 1, 2), DMY=(2, 1, 0), MDY=(2, 0, 1),
+                      YbD=(0, 1, 2), YBD=(0, 1, 2), DbY=(2, 1, 0), DBY=(2, 1, 0))
+
+    def __init__(self, year=None, month=None, day=None,
+                 year_jc=None, month_jc=None, day_jc=None):
+        self._validate(year, month, day)
+        self._validate(year_jc, month_jc, day_jc)
+
+        self.year = year
+        self.month = month
+        self.day = day
+        self.year_jc = year_jc
+        self.month_jc = month_jc
+        self.day_jc = day_jc
+
+    @staticmethod
+    def _validate(year, month, day):
+        """Check date triplet for validity.
+        """
+        if day is not None and month is None:
+            raise ValueError("Day without month")
+        if day is None:
+            day = 1
+        if month is None:
+            month = 1
+        if year is None:
+            year = 2000
+        # actual validation happens here
+        datetime.date(year, month, day)
+
+    @classmethod
+    def _fmtDate(cls, date, fmt, sep):
+        idx = cls._ymd_index[fmt]
+        t = [None, None, None]
+        t[idx[0]] = "%04d" % date[0]
+        if date[1]:
+            t[idx[1]] = "%02d" % date[1]
+        if date[2]:
+            t[idx[2]] = "%02d" % date[2]
+        return sep.join([x for x in t if x is not None])
+
+    def fmt(self, fmt, sep):
+        """Make string representation.
+
+        Parameters
+        ----------
+        fmt : str
+            One of 'YMD', 'MDY', or 'DMY'.
+        sep : str
+            Separator character, can be anything.
+        """
+        date = (self.year, self.month, self.day)
+        res = self._fmtDate(date, fmt, sep)
+        if self.year_jc or self.month_jc or self.day_jc:
+            date = (self.year_jc, self.month_jc, self.day_jc)
+            res += " ({0} JC)".format(self._fmtDate(date, fmt, sep))
+        return res
+
+    def __str__(self):
+        """Default date formatting in DD.MM.YYYY format.
+        """
+        return self.fmt('DMY', '.')
+
+    def __cmp__(self, other):
+        """Compare two dates
+        """
+        tup1 = (self.year, self.month, self.day)
+        tup2 = (other.year, other.month, other.day)
+        return cmp(tup1, tup2)
+
+
+class DateString(object):
+    """Class representing a date or few dates together with formatting
+    information.
+
+    Note: do not instantiate DateString objects directly, use `parse()` method instead.
+
+    This class is an internal representation of the date strings which can
+    contain one or more dates plus some textual info. As an example the input
+    may have date strings like "Around 05.12.1961" or "From 1991 to 2002".
+    `parse()` method below will parse these strings and extract dates from them
+    and replace input string with format string which may look like
+    "From {0} to {1}" and will construct DateString instance from all of that info.
+
+    Data instances can be compared, the first date in the input string used for
+    comparisons. They can also be formatted using `fmt()` method, the original
+    string is recreated, but the date format may be changed.
+
+    Parameters
+    ----------
+    dates : list of `Date` or None
+        If `tuples` is None then "no-date" object is constructed.
+        List can contain one or two tuples, each tuple can have 3 or 6
+        numbers. First element of tuple is year, second is month, third is day.
+        If tuple contains six elements then elements 4-6 specify Julian date.
+    dstr : str
+        Format string, e.g. "from {0} to {1}", number of substitution must
+        be equal to number of tuples in the list.
+    """
+
+    def __init__(self, dates, dstr):
+        self.dates = dates
+        self.dstr = dstr
+
+    def __cmp__(self, other):
+        d1 = self.dates[0] if self.dates else Date()
+        d2 = other.dates[0] if other.dates else Date()
+        return cmp(d1, d2)
+
+    def __nonzero__(self):
+        return self.dates is not None
+
+    def __str__(self):
+        """Default date formatting in DD.MM.YYYY format.
+        """
+        return self.fmt('DMY', '.')
+
+    def fmt(self, fmt, sep):
+        if self.dates is None:
+            return ""
+        return self.dstr.format(*[dt.fmt(fmt, sep) for dt in self.dates])
 
 
 _date_re_ymd = re.compile(r'''\b
@@ -84,112 +213,6 @@ _date_re_y = re.compile(r'''\b
 ''', re.X)
 
 
-def guessFormat(dates):
-    '''
-    Guesses the  format of the date strings. Returns one of the YMD, DMY, or MDY
-    constants.
-    '''
-
-    dates = list(dates)
-    _log.info("guessFormat: dates: %s", dates)
-    if not dates:
-        # any format will do
-        return YMD
-
-    formats = []
-    for fmt in (DMY, YMD, MDY):
-
-        try:
-            res = [parse(date, fmt) for date in dates]
-            formats.append(fmt)
-        except Exception as ex:
-            # _log.debug("guessFormat: failed: %s", ex)
-            # print "guessFormat: failed: %s" % ex
-            pass
-
-    if len(formats) != 1:
-        _log.debug("guessFormat: formats: %s", formats)
-        raise ValueError('date: unrecognized date format')
-    else:
-        _log.info("guessFormat: found format: %s", formats[0])
-
-    return formats[0]
-
-
-class Date(object):
-    """Class representing a date or few dates together with formatting
-    information.
-
-    Note: do not instantiate Date objects directly, use `parse()` method instead.
-
-    This class is an internal representation of the date strings which can
-    contain one or more dates plus some textual info. As an example the input
-    may have date strings like "Around 05.12.1961" or "From 1991 to 2002".
-    `parse()` method below will parse these strings and extract dates from them
-    and replace input string with format string which may look like
-    "From {0} to {1}" and will construct Date instance from all of that info.
-
-    Data instances can be compared, the first date in the input string used for
-    comparisons. They can also be formatted using `fmt()` method, the original
-    string is recreated, but the date format may be changed.
-
-    Parameters
-    ----------
-    tuples : list of tuples or None
-        If `tuples` is None then "no-date" object is constructed.
-        List can contain one or two tuples, each tuple can have 3 or 6
-        numbers. First element of tuple is year, second is month, third is day.
-        If tuple contains six elements then elements 4-6 specify Julian date.
-    dstr : str
-        Format string, e.g. "from {0} to {1}", number of substitution must
-        be equal to number of tuples in the list.
-    """
-
-    def __init__(self, tuples, dstr):
-        self.tuples = tuples
-        self.dstr = dstr
-
-    def __cmp__(self, other):
-        tup1 = self.tuples[0] if self.tuples else ()
-        tup2 = other.tuples[0] if other.tuples else ()
-        return cmp(tup1[:3], tup2[:3])
-
-    def __nonzero__(self):
-        return self.tuples is not None
-
-    def __str__(self):
-        """Default date formatting in DD.MM.YYYY format.
-        """
-        return self.fmt('DMY', '.')
-
-    def fmt(self, fmt, sep):
-
-        def _fmtThree(date, fmt, sep):
-            idx = _ymd_index[fmt]
-            t = [None, None, None]
-            t[idx[0]] = "%04d" % date[0]
-            if date[1]:
-                t[idx[1]] = "%02d" % date[1]
-            if date[2]:
-                t[idx[2]] = "%02d" % date[2]
-            return sep.join([x for x in t if x is not None])
-
-        def _fmtSix(date, fmt, sep):
-            res = _fmtThree(date[:3], fmt, sep)
-            if len(date) == 6:
-                res += " ({0} JC)".format(_fmtThree(date[3:], fmt, sep))
-            return res
-
-        if self.tuples is None:
-            return ""
-        return self.dstr.format(*[_fmtSix(dt, fmt, sep) for dt in self.tuples])
-
-
-# Quick validation of tuple contents
-def _validate(tup):
-    # replace zeros with ones
-    fix = [max(1, x) for x in tup]
-    datetime.date(*fix)
 
 def parse(datestr, fmt):
     '''Parse date string.
@@ -224,13 +247,13 @@ def parse(datestr, fmt):
 
     Returns
     -------
-    Date object
+    DateString object
     '''
 
     # _log.debug("date.parse: datestr=%s fmt=%s", datestr, fmt)
 
     if not datestr:
-        return Date(None, None)
+        return DateString(None, None)
 
     fstr = datestr
 
@@ -264,41 +287,69 @@ def parse(datestr, fmt):
             break
 
         # _log.debug('date.parse: match=%s', match.group(0))
-        gd = match.groupdict(0)
+        gd = match.groupdict()
 
-        y, m, d, yjc, mjc, djc = [int(gd.get(k, 0))
-                                  for k in ('year', 'mon', 'day', 'year_jc', 'mon_jc', 'day_jc')]
+        items = [gd.get(k) for k in ('year', 'mon', 'day', 'year_jc', 'mon_jc', 'day_jc')]
+        y, m, d, yjc, mjc, djc = [int(item) if item is not None else None for item in items]
+
         # MDY is DMY with swapped MD (only if day was present in match)
         if fmt == 'MDY' and day:
             m, d = d, m
             mjc, djc = djc, mjc
 
-        if (yjc, mjc, djc) == (0, 0, 0):
-            dt = (y, m, d)
-            try:
-                _validate(dt)
-            except Exception as ex:
-                # _log.error("validation error: ex={0} fstr={1} dt={2}".format(str(ex), fstr, dt))
-                raise
-        else:
-            if yjc == 0:
+        if yjc or mjc or djc:
+            if yjc is None:
                 yjc = y
-            if mjc == 0:
+            if mjc is None:
                 mjc = m
-            if djc == 0:
+            if djc is None:
                 djc = d
-            dt = (y, m, d, yjc, mjc, djc)
-            try:
-                _validate(dt[:3])
-                _validate(dt[3:])
-            except Exception as ex:
-                # _log.error("validation error: ex={0} fstr={1} dt={2}".format(str(ex), fstr, dt))
-                raise
+            dt = Date(y, m, d, yjc, mjc, djc)
+        else:
+            dt = Date(y, m, d)
 
         tuples.append(dt)
         fstr = fstr[:match.start()] + "{" + str(count) + "}" + fstr[match.end():]
         count += 1
 
-    d = Date(tuples, fstr)
+    d = DateString(tuples, fstr)
     # _log.debug("date.parse: date=%s", d)
     return d
+
+
+def guessFormat(dates):
+    '''Guesses format of the date strings.
+
+    Parameters
+    ----------
+    dates : list of strings
+
+    Returns
+    -------
+    One of the YMD, DMY, or MDY constants.
+    '''
+
+    dates = list(dates)
+    _log.info("guessFormat: dates: %s", dates)
+    if not dates:
+        # any format will do
+        return YMD
+
+    formats = []
+    for fmt in (DMY, YMD, MDY):
+
+        try:
+            res = [parse(date, fmt) for date in dates]
+            formats.append(fmt)
+        except Exception as ex:
+            # _log.debug("guessFormat: failed: %s", ex)
+            # print "guessFormat: failed: %s" % ex
+            pass
+
+    if len(formats) != 1:
+        _log.debug("guessFormat: formats: %s", formats)
+        raise ValueError('date: unrecognized date format')
+    else:
+        _log.info("guessFormat: found format: %s", formats[0])
+
+    return formats[0]

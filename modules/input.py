@@ -16,8 +16,7 @@ class MultipleFiles(RuntimeError):
     '''Class for exceptions generated when there is more than one file
     matching specified criteria.
     '''
-    def __init__(self, msg):
-        RuntimeError.__init__(self, msg)
+    pass
 
 class _FileLocator(object):
     '''
