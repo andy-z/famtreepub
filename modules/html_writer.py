@@ -347,6 +347,7 @@ class HtmlWriter(object):
                 # resize it if larger than needed
                 maxsize = (self.config.getSize('image_width').px, self.config.getSize('image_height').px)
                 size = utils.resize(img.size, maxsize)
+                size = (int(size[0]), int(size[1]))
                 if size != img.size:
                     # means size was reduced
                     _log.debug('Resize image to %s', size)
@@ -388,7 +389,7 @@ class HtmlWriter(object):
     def _namestat(self, people):
 
         def _gencouples(namefreq):
-            halflen = (len(namefreq) + 1) / 2
+            halflen = (len(namefreq) + 1) // 2
             for i in range(halflen):
                 n1, c1 = namefreq[2 * i]
                 n2, c2 = None, None

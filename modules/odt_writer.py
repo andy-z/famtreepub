@@ -375,7 +375,7 @@ class OdtWriter(object):
     def _namestat(self, people):
 
         def _gencouples(namefreq):
-            halflen = (len(namefreq) + 1) / 2
+            halflen = (len(namefreq) + 1) // 2
             for i in range(halflen):
                 n1, c1 = namefreq[2 * i]
                 n2, c2 = None, None
