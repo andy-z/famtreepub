@@ -48,6 +48,24 @@ class SizeUnitTest(unittest.TestCase):
         s3 = s1 / 4
         self.assertEqual(s3.value, 0.5)
 
+        s3 = s1 + 1
+        self.assertEqual(s3.value, 3)
+        s3 = 1 + s1
+        self.assertEqual(s3.value, 3)
+        s3 = "72pt" + s1
+        self.assertEqual(s3.value, 3)
+        s3 = s1 + "72pt"
+        self.assertEqual(s3.value, 3)
+
+        s3 = s1 - 1
+        self.assertEqual(s3.value, 1)
+        s3 = 3 - s1
+        self.assertEqual(s3.value, 1)
+        s3 = "216pt" - s1
+        self.assertEqual(s3.value, 1)
+        s3 = s1 - "72pt"
+        self.assertEqual(s3.value, 1)
+
     def test_4_meth(self):
 
         s1 = Size("144pt")

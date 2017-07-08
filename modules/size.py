@@ -85,14 +85,26 @@ class Size(object):
 
     def __sub__(self, other):
         ''' Subtract size from other size '''
-        return Size(self.value - other.value)
+        return Size(self.value - Size(other).value)
+
+    def __rsub__(self, other):
+        ''' Subtract size from other size '''
+        return Size(other) - self
 
     def __add__(self, other):
         ''' Add two sizes '''
-        return Size(self.value + other.value)
+        return Size(self.value + Size(other).value)
+
+    def __radd__(self, other):
+        ''' Add size and something: x + size'''
+        return Size(other) + self
 
     def __mul__(self, other):
         ''' Multiply size by a factor '''
+        return Size(self.value * other)
+
+    def __rmul__(self, other):
+        ''' Multiply size by a factor: other * size '''
         return Size(self.value * other)
 
     def __div__(self, other):
@@ -103,9 +115,9 @@ class Size(object):
         ''' Divide size by a factor '''
         return Size(self.value / other)
 
-    def __rmul__(self, other):
-        ''' Multiply size by a factor '''
-        return Size(self.value * other)
+    def __floordif__(self, other):
+        ''' Divide size by a factor '''
+        return Size(self.value // other)
 
     def __xor__(self, units):
         ''' Size(1.)^"mm"  will return "25.4mm" '''
