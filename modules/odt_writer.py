@@ -17,36 +17,10 @@ from odf import text, style, draw, table
 
 from .plotter import Plotter
 from .size import Size
-from . import gtext
+from .gtext import gtext as _
 from . import utils
 
 _log = logging.getLogger(__name__)
-
-def _unknownName(name):
-    return name is None or name.startswith(('?', '.'))
-
-def _nameCmp(lhs, rhs):
-    if _unknownName(lhs):
-        if _unknownName(rhs):
-            return 0
-        return 1
-    else:
-        if _unknownName(rhs):
-            return -1
-        return cmp(lhs, rhs)
-
-def _personCmp(lhs, rhs):
-    lhs, rhs = lhs.name, rhs.name
-    d = _nameCmp(lhs.last, rhs.last)
-    if d != 0:
-        return d
-    d = _nameCmp(lhs.first, rhs.first)
-    if d != 0:
-        return d
-    return _nameCmp(lhs.middle, rhs.middle)
-
-
-_ = gtext.gtext
 
 # indices of margins
 MARGIN_LEFT = 0
@@ -170,7 +144,7 @@ class OdtWriter(object):
         # sort people according to last name, first name, middle name, missing
         # names or names starting with '?' sort last
         people = model.people[:]
-        people.sort(_personCmp)
+        people.sort()
 
         for person in people:
 

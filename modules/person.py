@@ -115,3 +115,27 @@ class Person(object):
 
     def __str__(self):
         return "Person(id = %s, name = %s)" % (self.id, self.name)
+
+    def __cmp__(self, rhs):
+
+        def _unknownName(name):
+            return name is None or name.startswith(('?', '.'))
+
+        def _nameCmp(lhs, rhs):
+            if _unknownName(lhs):
+                if _unknownName(rhs):
+                    return 0
+                return 1
+            else:
+                if _unknownName(rhs):
+                    return -1
+                return cmp(lhs, rhs)
+
+        lhs, rhs = self.name, rhs.name
+        d = _nameCmp(lhs.last, rhs.last)
+        if d != 0:
+            return d
+        d = _nameCmp(lhs.first, rhs.first)
+        if d != 0:
+            return d
+        return _nameCmp(lhs.middle, rhs.middle)
